@@ -6,6 +6,15 @@ Initial public project setup.
 
 ---
 
+## ✅ Setup
+
+- Added Vite, React, and TypeScript app scaffold
+- Added placeholder screens for Generator, Depth Painter, and Pattern Maker
+- Added GitHub Pages deployment workflow
+- Added baseline folder structure for canvas, stereogram, image, and storage utilities
+
+---
+
 # ✅ Added
 
 - 🌀 Browser-based auto stereogram generation
