@@ -145,4 +145,4 @@ If you build something weird and wonderful with MagicEyeLab, definitely share it
 
 MIT License
 
-See [LICENSE.md](LICENSE.md)
+See [LICENSE](LICENSE)
