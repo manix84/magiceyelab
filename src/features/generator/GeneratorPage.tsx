@@ -18,6 +18,7 @@ import { renderStereogram } from "../../lib/stereogram/renderStereogram";
 import styles from "./GeneratorPage.module.scss";
 
 const maxPreviewWidth = 1200;
+const exportNamePlaceholder = "magiceye_DD-MM-YYYY_hh-mm-ss.png";
 type ImportSource = "depth" | "pattern";
 
 function createDefaultExportName(date = new Date()) {
@@ -68,7 +69,6 @@ function getPreviewSize(image: HTMLImageElement) {
 }
 
 export function GeneratorPage() {
-  const [defaultExportName] = useState(createDefaultExportName);
   const [exportName, setExportName] = useState("");
   const [depthStrength, setDepthStrength] = useState(45);
   const [repeatWidth, setRepeatWidth] = useState(120);
@@ -263,7 +263,7 @@ export function GeneratorPage() {
     }
 
     const link = document.createElement("a");
-    link.download = normalisePngFileName(exportName || defaultExportName);
+    link.download = normalisePngFileName(exportName);
     link.href = canvas.toDataURL("image/png");
     link.click();
   }
@@ -455,7 +455,7 @@ export function GeneratorPage() {
             <input
               type="text"
               value={exportName}
-              placeholder={defaultExportName}
+              placeholder={exportNamePlaceholder}
               onChange={(event) => setExportName(event.target.value)}
             />
           </label>
