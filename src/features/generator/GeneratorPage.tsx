@@ -4,21 +4,22 @@ import { CanvasPlaceholder } from "../../components/canvas/CanvasPlaceholder";
 import { FieldGroup } from "../../components/controls/FieldGroup";
 import { MdiIcon } from "../../components/icons/MdiIcon";
 import { PageHeader } from "../../components/layout/PageHeader";
+import styles from "./GeneratorPage.module.scss";
 
 export function GeneratorPage() {
   const [depthStrength, setDepthStrength] = useState(45);
   const [repeatWidth, setRepeatWidth] = useState(120);
 
   return (
-    <div className="workspace">
+    <div className={styles.workspace}>
       <PageHeader
         eyebrow="Stereogram Generator"
         title="Generate hidden-depth images"
         description="Import a depth map and pattern tile, tune the render settings, then export the stereogram."
       />
 
-      <div className="workspace-grid">
-        <aside className="tool-panel" aria-label="Generator controls">
+      <div className={styles.workspaceGrid}>
+        <aside className={styles.toolPanel} aria-label="Generator controls">
           <FieldGroup title="Sources">
             <button type="button">
               <MdiIcon path={mdiImagePlus} />
@@ -31,8 +32,8 @@ export function GeneratorPage() {
           </FieldGroup>
 
           <FieldGroup title="Render">
-            <label className="range-field">
-              <span className="range-label">
+            <label className={styles.rangeField}>
+              <span className={styles.rangeLabel}>
                 <span>Depth strength</span>
                 <output>{depthStrength}%</output>
               </span>
@@ -44,8 +45,8 @@ export function GeneratorPage() {
                 onChange={(event) => setDepthStrength(Number(event.target.value))}
               />
             </label>
-            <label className="range-field">
-              <span className="range-label">
+            <label className={styles.rangeField}>
+              <span className={styles.rangeLabel}>
                 <span>Repeat width</span>
                 <output>{repeatWidth}px</output>
               </span>
@@ -63,13 +64,13 @@ export function GeneratorPage() {
             </button>
           </FieldGroup>
 
-          <button className="primary-action" type="button">
+          <button className={styles.primaryAction} type="button">
             <MdiIcon path={mdiDownload} />
             Export PNG
           </button>
         </aside>
 
-        <section className="preview-area" aria-label="Stereogram preview">
+        <section className={styles.previewArea} aria-label="Stereogram preview">
           <CanvasPlaceholder label="Stereogram canvas" tone="dark" />
         </section>
       </div>

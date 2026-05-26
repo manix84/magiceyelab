@@ -1,0 +1,73 @@
+.workspace {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.workspaceGrid {
+  display: grid;
+  grid-template-columns: minmax(16rem, 20rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.toolPanel {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid #ded9cc;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #ffffff;
+}
+
+.segmentedControl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+
+  button[aria-pressed="true"] {
+    border-color: #285c61;
+    color: #102f32;
+    background: #dcebe6;
+  }
+}
+
+.paletteRow {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.45rem;
+
+  button {
+    min-height: 2.35rem;
+    border-color: #ffffff;
+    box-shadow: 0 0 0 1px #c8c5bb;
+  }
+}
+
+.primaryAction {
+  color: #ffffff;
+  border-color: #285c61;
+  background: #285c61;
+}
+
+.previewArea {
+  min-width: 0;
+}
+
+.splitPreview {
+  display: grid;
+  grid-template-columns: minmax(14rem, 24rem) minmax(0, 1fr);
+  gap: 1rem;
+
+  > * {
+    min-height: clamp(20rem, 50vh, 36rem);
+  }
+}
+
+@media (max-width: 840px) {
+  .workspaceGrid,
+  .splitPreview {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,57 @@
+.workspace {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.workspaceGrid {
+  display: grid;
+  grid-template-columns: minmax(16rem, 20rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.toolPanel {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid #ded9cc;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #ffffff;
+}
+
+.rangeField {
+  min-width: 0;
+}
+
+.rangeLabel {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+
+  output {
+    min-width: 3.5rem;
+    color: #285c61;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    text-align: right;
+  }
+}
+
+.primaryAction {
+  color: #ffffff;
+  border-color: #285c61;
+  background: #285c61;
+}
+
+.previewArea {
+  min-width: 0;
+}
+
+@media (max-width: 840px) {
+  .workspaceGrid {
+    grid-template-columns: 1fr;
+  }
+}
