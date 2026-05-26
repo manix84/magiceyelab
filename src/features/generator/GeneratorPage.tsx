@@ -4,16 +4,40 @@ import { FieldGroup } from "../../components/controls/FieldGroup";
 import { MdiIcon } from "../../components/icons/MdiIcon";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { supportedImageTypes } from "../import-export";
+import { inferDepthMap } from "../../lib/image/inferDepthMap";
 import { loadImageFile } from "../../lib/image/loadImageFile";
 import { defaultStereogramSettings } from "../../lib/stereogram/settings";
 import { renderStereogram } from "../../lib/stereogram/renderStereogram";
 
+function createDefaultExportName(date = new Date()) {
+  const parts = [
+    date.getDate(),
+    date.getMonth() + 1,
+    date.getFullYear(),
+    date.getHours(),
+    date.getMinutes(),
+    date.getSeconds(),
+  ].map((part) => String(part).padStart(2, "0"));
+
+  return `magiceye_${parts[0]}-${parts[1]}-${parts[2]}_${parts[3]}-${parts[4]}-${parts[5]}.png`;
+}
+
+function normalisePngFileName(fileName: string) {
+  const trimmedName = fileName.trim() || createDefaultExportName();
+  return trimmedName.toLowerCase().endsWith(".png")
+    ? trimmedName
+    : `${trimmedName}.png`;
+}
+
 export function GeneratorPage() {
+  const [defaultExportName] = useState(createDefaultExportName);
+  const [exportName, setExportName] = useState("");
   const [depthStrength, setDepthStrength] = useState(45);
   const [repeatWidth, setRepeatWidth] = useState(120);
   const [showDepthOverlay, setShowDepthOverlay] = useState(false);
   const [depthImage, setDepthImage] = useState<HTMLImageElement | null>(null);
   const [depthFileName, setDepthFileName] = useState("");
+  const [depthInferenceMessage, setDepthInferenceMessage] = useState("");
   const [patternImage, setPatternImage] = useState<HTMLImageElement | null>(null);
   const [patternFileName, setPatternFileName] = useState("");
   const [importError, setImportError] = useState("");
@@ -48,6 +72,33 @@ export function GeneratorPage() {
     }
   }
 
+  async function handleDepthImport(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!(supportedImageTypes as readonly string[]).includes(file.type)) {
+      setImportError("Choose a PNG, JPEG, or WEBP image.");
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      const image = await loadImageFile(file);
+      const inference = await inferDepthMap(image);
+      setDepthImage(inference.image);
+      setDepthFileName(file.name);
+      setDepthInferenceMessage(inference.message);
+      setImportError("");
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : "Could not load image.");
+    } finally {
+      event.target.value = "";
+    }
+  }
+
   function handleExport() {
     const canvas = canvasRef.current;
 
@@ -56,7 +107,7 @@ export function GeneratorPage() {
     }
 
     const link = document.createElement("a");
-    link.download = "magiceyelab-stereogram.png";
+    link.download = normalisePngFileName(exportName || defaultExportName);
     link.href = canvas.toDataURL("image/png");
     link.click();
   }
@@ -93,6 +144,16 @@ export function GeneratorPage() {
 
       <div className="workspace-grid">
         <aside className="tool-panel" aria-label="Generator controls">
+          <label className="text-field">
+            <span>Export name</span>
+            <input
+              type="text"
+              value={exportName}
+              placeholder={defaultExportName}
+              onChange={(event) => setExportName(event.target.value)}
+            />
+          </label>
+
           <FieldGroup title="Sources">
             <label className="file-button">
               <MdiIcon path={mdiImagePlus} />
@@ -100,15 +161,13 @@ export function GeneratorPage() {
               <input
                 type="file"
                 accept={imageAccept}
-                onChange={(event) =>
-                  handleImageImport(event, (image, fileName) => {
-                    setDepthImage(image);
-                    setDepthFileName(fileName);
-                  })
-                }
+                onChange={handleDepthImport}
               />
             </label>
             {depthFileName ? <p className="source-file">{depthFileName}</p> : null}
+            {depthInferenceMessage ? (
+              <p className="source-note">{depthInferenceMessage}</p>
+            ) : null}
 
             <label className="file-button">
               <MdiIcon path={mdiImagePlus} />

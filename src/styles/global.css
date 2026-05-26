@@ -200,6 +200,29 @@ a {
   accent-color: #285c61;
 }
 
+.text-field {
+  display: grid;
+  gap: 0.45rem;
+  color: #343633;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.text-field input {
+  width: 100%;
+  min-height: 2.5rem;
+  border: 1px solid #c8c5bb;
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  color: #202124;
+  background: #ffffff;
+}
+
+.text-field input:focus {
+  border-color: #285c61;
+  outline: 2px solid rgba(40, 92, 97, 0.18);
+}
+
 .field-group .file-button {
   position: relative;
   display: inline-flex;
@@ -228,6 +251,7 @@ a {
 }
 
 .source-file,
+.source-note,
 .form-error {
   margin: -0.35rem 0 0;
   font-size: 0.8rem;
@@ -238,6 +262,11 @@ a {
   color: #60615d;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.source-note {
+  color: #285c61;
+  line-height: 1.35;
 }
 
 .form-error {
