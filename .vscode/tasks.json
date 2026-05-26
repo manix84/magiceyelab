@@ -1,0 +1,36 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "dev",
+      "label": "npm: dev",
+      "detail": "vite",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": {
+          "regexp": "^(?!x)x$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*VITE.*ready in.*$",
+          "endsPattern": "^.*Local:.*$"
+        }
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "reveal": "always",
+        "clear": false
+      },
+      "runOptions": {
+        "instanceLimit": 1,
+        "reevaluateOnRerun": false
+      }
+    }
+  ]
+}
