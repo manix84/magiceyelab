@@ -214,16 +214,6 @@ export function GeneratorPage() {
 
       <div className={styles.workspaceGrid}>
         <aside className={styles.toolPanel} aria-label="Generator controls">
-          <label className={styles.textField}>
-            <span>Export name</span>
-            <input
-              type="text"
-              value={exportName}
-              placeholder={defaultExportName}
-              onChange={(event) => setExportName(event.target.value)}
-            />
-          </label>
-
           <FieldGroup title="Sources">
             <label className={styles.fileButton}>
               <MdiIcon path={mdiImagePlus} />
@@ -296,6 +286,16 @@ export function GeneratorPage() {
               <span className={styles.toggleLabel}>Show depth overlay</span>
             </label>
           </FieldGroup>
+
+          <label className={styles.textField}>
+            <span>Export name</span>
+            <input
+              type="text"
+              value={exportName}
+              placeholder={defaultExportName}
+              onChange={(event) => setExportName(event.target.value)}
+            />
+          </label>
 
           <button
             className={styles.primaryAction}
