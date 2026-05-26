@@ -8,6 +8,17 @@ type RenderStereogramOptions = {
   showDepthOverlay?: boolean;
 };
 
+const maxPatternSampleSize = 512;
+
+function getClampedSize(width: number, height: number, maxSize: number) {
+  const scale = Math.min(1, maxSize / Math.max(width, height));
+
+  return {
+    width: Math.max(1, Math.round(width * scale)),
+    height: Math.max(1, Math.round(height * scale)),
+  };
+}
+
 function createImageCanvas(
   image: HTMLImageElement,
   width: number,
@@ -55,10 +66,15 @@ export function renderStereogram({
     outputWidth,
     outputHeight,
   );
-  const { canvas: patternCanvas, context: patternContext } = createImageCanvas(
-    patternImage,
+  const patternSize = getClampedSize(
     patternImage.naturalWidth,
     patternImage.naturalHeight,
+    maxPatternSampleSize,
+  );
+  const { canvas: patternCanvas, context: patternContext } = createImageCanvas(
+    patternImage,
+    patternSize.width,
+    patternSize.height,
   );
 
   const depthPixels = depthContext.getImageData(0, 0, outputWidth, outputHeight);
@@ -98,7 +114,7 @@ export function renderStereogram({
       outputPixels.data[outputIndex] = patternPixels.data[patternIndex];
       outputPixels.data[outputIndex + 1] = patternPixels.data[patternIndex + 1];
       outputPixels.data[outputIndex + 2] = patternPixels.data[patternIndex + 2];
-      outputPixels.data[outputIndex + 3] = patternPixels.data[patternIndex + 3];
+      outputPixels.data[outputIndex + 3] = 255;
     }
   }
 

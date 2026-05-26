@@ -29,11 +29,31 @@ function createCanvas(width: number, height: number) {
 
 function canvasToImage(canvas: HTMLCanvasElement): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
-    const image = new Image();
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("Could not create inferred depth map."));
+        return;
+      }
 
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("Could not create inferred depth map."));
-    image.src = canvas.toDataURL("image/png");
+      const image = new Image();
+      const url = URL.createObjectURL(blob);
+
+      image.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve(image);
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Could not create inferred depth map."));
+      };
+      image.src = url;
+    }, "image/png");
+  });
+}
+
+function waitForFrame() {
+  return new Promise<void>((resolve) => {
+    window.requestAnimationFrame(() => resolve());
   });
 }
 
@@ -220,6 +240,10 @@ async function inferDepthFromStereoPair(image: HTMLImageElement) {
       outputPixels.data[index + 1] = value;
       outputPixels.data[index + 2] = value;
       outputPixels.data[index + 3] = 255;
+    }
+
+    if (y > 0 && y % 12 === 0) {
+      await waitForFrame();
     }
   }
 

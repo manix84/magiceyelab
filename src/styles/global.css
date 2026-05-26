@@ -243,6 +243,12 @@ a {
   border-color: #285c61;
 }
 
+.field-group .file-button:focus-within {
+  border-color: #285c61;
+  outline: 2px solid rgba(40, 92, 97, 0.18);
+  outline-offset: 2px;
+}
+
 .field-group .file-button input {
   position: absolute;
   inset: 0;
