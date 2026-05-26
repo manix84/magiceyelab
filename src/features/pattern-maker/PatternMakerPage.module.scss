@@ -1,0 +1,53 @@
+@use "../../styles/mixins";
+
+.workspace {
+  @include mixins.workspace;
+}
+
+.workspaceGrid {
+  @include mixins.workspace-grid;
+}
+
+.toolPanel {
+  @include mixins.tool-panel;
+}
+
+.segmentedControl {
+  @include mixins.segmented-control;
+}
+
+.paletteRow {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.45rem;
+
+  button {
+    min-height: 2.35rem;
+    border-color: #ffffff;
+    box-shadow: 0 0 0 1px #c8c5bb;
+  }
+}
+
+.primaryAction {
+  @include mixins.primary-action;
+}
+
+.previewArea {
+  @include mixins.preview-area;
+}
+
+.splitPreview {
+  display: grid;
+  grid-template-columns: minmax(14rem, 24rem) minmax(0, 1fr);
+  gap: 1rem;
+
+  > * {
+    min-height: clamp(20rem, 50vh, 36rem);
+  }
+}
+
+@media (max-width: 840px) {
+  .splitPreview {
+    grid-template-columns: 1fr;
+  }
+}

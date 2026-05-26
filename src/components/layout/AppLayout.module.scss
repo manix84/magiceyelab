@@ -1,0 +1,128 @@
+.shell {
+  display: grid;
+  min-height: 100vh;
+  grid-template-rows: auto 1fr;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  border-bottom: 1px solid transparent;
+  padding: 1rem clamp(1rem, 3vw, 2rem);
+  background: #f7f5ef;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease,
+    backdrop-filter 180ms ease;
+
+  &.scrolled {
+    border-color: rgba(222, 217, 204, 0.72);
+    background: rgba(255, 250, 240, 0.74);
+    box-shadow: 0 12px 32px rgba(23, 25, 26, 0.08);
+    backdrop-filter: blur(16px) saturate(1.25);
+    -webkit-backdrop-filter: blur(16px) saturate(1.25);
+  }
+
+  @media (max-width: 840px) {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  @media (max-width: 560px) {
+    padding-inline: 0.85rem;
+  }
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: max-content;
+
+  strong,
+  small {
+    display: block;
+  }
+
+  small {
+    color: #60615d;
+    font-size: 0.8rem;
+
+    @media (max-width: 560px) {
+      display: none;
+    }
+  }
+
+  &Mark {
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    place-items: center;
+    border-radius: 8px;
+    color: #ffffff;
+    background: #285c61;
+    font-weight: 800;
+  }
+}
+
+.primaryNav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+
+  @media (max-width: 840px) {
+    justify-content: stretch;
+  }
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 0.65rem 0.8rem;
+  color: #4c514f;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+
+  &:hover,
+  &:global(.active) {
+    border-color: rgba(40, 92, 97, 0.14);
+    color: #102f32;
+    background: rgba(220, 235, 230, 0.78);
+  }
+
+  .scrolled &:global(.active) {
+    background: rgba(220, 235, 230, 0.9);
+  }
+
+  @media (max-width: 840px) {
+    flex: 1 1 9rem;
+  }
+
+  @media (max-width: 560px) {
+    justify-content: center;
+
+    span {
+      display: none;
+    }
+  }
+}
+
+.main {
+  padding: clamp(1rem, 3vw, 2rem);
+
+  @media (max-width: 560px) {
+    padding-inline: 0.85rem;
+  }
+}

@@ -1,24 +1,26 @@
+import classNames from "classnames";
 import { mdiBrush, mdiDiceMultiple, mdiEraser, mdiPalette } from "@mdi/js";
 import { CanvasPlaceholder } from "../../components/canvas/CanvasPlaceholder";
 import { FieldGroup } from "../../components/controls/FieldGroup";
 import { MdiIcon } from "../../components/icons/MdiIcon";
 import { PageHeader } from "../../components/layout/PageHeader";
+import styles from "./PatternMakerPage.module.scss";
 
 const palette = ["#1d3557", "#e63946", "#f1faee", "#2a9d8f", "#f4a261"];
 
 export function PatternMakerPage() {
   return (
-    <div className="workspace">
+    <div className={styles.workspace}>
       <PageHeader
         eyebrow="Pattern Maker"
         title="Build seamless repeating tiles"
         description="Draw a compact pattern tile, preview its repeat, and feed it into the stereogram generator."
       />
 
-      <div className="workspace-grid">
-        <aside className="tool-panel" aria-label="Pattern maker controls">
+      <div className={styles.workspaceGrid}>
+        <aside className={styles.toolPanel} aria-label="Pattern maker controls">
           <FieldGroup title="Tools">
-            <div className="segmented-control" aria-label="Pattern tool">
+            <div className={styles.segmentedControl} aria-label="Pattern tool">
               <button type="button" aria-pressed="true">
                 <MdiIcon path={mdiBrush} />
                 Brush
@@ -31,7 +33,7 @@ export function PatternMakerPage() {
           </FieldGroup>
 
           <FieldGroup title="Palette">
-            <div className="palette-row">
+            <div className={styles.paletteRow}>
               {palette.map((color) => (
                 <button
                   key={color}
@@ -47,13 +49,16 @@ export function PatternMakerPage() {
             </button>
           </FieldGroup>
 
-          <button className="primary-action" type="button">
+          <button className={styles.primaryAction} type="button">
             <MdiIcon path={mdiDiceMultiple} />
             Random pattern
           </button>
         </aside>
 
-        <section className="preview-area split-preview" aria-label="Pattern canvases">
+        <section
+          className={classNames(styles.previewArea, styles.splitPreview)}
+          aria-label="Pattern canvases"
+        >
           <CanvasPlaceholder label="Pattern tile" />
           <CanvasPlaceholder label="Seamless preview" tone="dark" />
         </section>

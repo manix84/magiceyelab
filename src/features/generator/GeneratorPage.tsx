@@ -1,4 +1,5 @@
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import classNames from "classnames";
 import { mdiDownload, mdiImagePlus } from "@mdi/js";
 import { FieldGroup } from "../../components/controls/FieldGroup";
 import { MdiIcon } from "../../components/icons/MdiIcon";
@@ -8,6 +9,7 @@ import { inferDepthMap } from "../../lib/image/inferDepthMap";
 import { loadImageFile } from "../../lib/image/loadImageFile";
 import { defaultStereogramSettings } from "../../lib/stereogram/settings";
 import { renderStereogram } from "../../lib/stereogram/renderStereogram";
+import styles from "./GeneratorPage.module.scss";
 
 const maxPreviewWidth = 1200;
 
@@ -203,16 +205,16 @@ export function GeneratorPage() {
   }, [depthImage, patternImage]);
 
   return (
-    <div className="workspace">
+    <div className={styles.workspace}>
       <PageHeader
         eyebrow="Stereogram Generator"
         title="Generate hidden-depth images"
         description="Import a depth map and pattern tile, tune the render settings, then export the stereogram."
       />
 
-      <div className="workspace-grid">
-        <aside className="tool-panel" aria-label="Generator controls">
-          <label className="text-field">
+      <div className={styles.workspaceGrid}>
+        <aside className={styles.toolPanel} aria-label="Generator controls">
+          <label className={styles.textField}>
             <span>Export name</span>
             <input
               type="text"
@@ -223,7 +225,7 @@ export function GeneratorPage() {
           </label>
 
           <FieldGroup title="Sources">
-            <label className="file-button">
+            <label className={styles.fileButton}>
               <MdiIcon path={mdiImagePlus} />
               <span>Import depth map</span>
               <input
@@ -232,15 +234,15 @@ export function GeneratorPage() {
                 onChange={handleDepthImport}
               />
             </label>
-            {depthFileName ? <p className="source-file">{depthFileName}</p> : null}
+            {depthFileName ? <p className={styles.sourceFile}>{depthFileName}</p> : null}
             {depthInferenceMessage ? (
-              <p className="source-note">{depthInferenceMessage}</p>
+              <p className={styles.sourceNote}>{depthInferenceMessage}</p>
             ) : null}
             {depthImportError ? (
-              <p className="form-error">{depthImportError}</p>
+              <p className={styles.formError}>{depthImportError}</p>
             ) : null}
 
-            <label className="file-button">
+            <label className={styles.fileButton}>
               <MdiIcon path={mdiImagePlus} />
               <span>Import pattern</span>
               <input
@@ -250,16 +252,16 @@ export function GeneratorPage() {
               />
             </label>
             {patternFileName ? (
-              <p className="source-file">{patternFileName}</p>
+              <p className={styles.sourceFile}>{patternFileName}</p>
             ) : null}
             {patternImportError ? (
-              <p className="form-error">{patternImportError}</p>
+              <p className={styles.formError}>{patternImportError}</p>
             ) : null}
           </FieldGroup>
 
           <FieldGroup title="Render">
-            <label className="range-field">
-              <span className="range-label">
+            <label className={styles.rangeField}>
+              <span className={styles.rangeLabel}>
                 <span>Depth strength</span>
                 <output>{depthStrength}%</output>
               </span>
@@ -271,8 +273,8 @@ export function GeneratorPage() {
                 onChange={(event) => setDepthStrength(Number(event.target.value))}
               />
             </label>
-            <label className="range-field">
-              <span className="range-label">
+            <label className={styles.rangeField}>
+              <span className={styles.rangeLabel}>
                 <span>Repeat width</span>
                 <output>{repeatWidth}px</output>
               </span>
@@ -284,7 +286,7 @@ export function GeneratorPage() {
                 onChange={(event) => setRepeatWidth(Number(event.target.value))}
               />
             </label>
-            <label className="toggle-field">
+            <label className={styles.toggleField}>
               <input
                 type="checkbox"
                 checked={showDepthOverlay}
@@ -295,7 +297,7 @@ export function GeneratorPage() {
           </FieldGroup>
 
           <button
-            className="primary-action"
+            className={styles.primaryAction}
             type="button"
             disabled={!depthImage || !patternImage}
             onClick={handleExport}
@@ -305,10 +307,13 @@ export function GeneratorPage() {
           </button>
         </aside>
 
-        <section className="preview-area stereogram-preview" aria-label="Stereogram preview">
-          <canvas ref={canvasRef} className="stereogram-canvas" />
+        <section
+          className={classNames(styles.previewArea, styles.stereogramPreview)}
+          aria-label="Stereogram preview"
+        >
+          <canvas ref={canvasRef} className={styles.stereogramCanvas} />
           {!depthImage || !patternImage ? (
-            <div className="preview-empty">
+            <div className={styles.previewEmpty}>
               <span>Import a depth map and pattern to generate a preview</span>
             </div>
           ) : null}
