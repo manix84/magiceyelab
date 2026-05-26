@@ -1,21 +1,25 @@
 {
   "name": "magiceyelab",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:dry-run": "npm run build",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
+    "typefix": "npm run typecheck",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "check": "npm run lint && npm run typefix && npm run build:dry-run",
     "precommit:staged": "node scripts/pre-commit-staged-checks.mjs",
     "version:bump": "node scripts/smart-version-bump.mjs"
   },
   "dependencies": {
+    "@mdi/js": "^7.4.47",
+    "@mdi/react": "^1.6.1",
     "@vitejs/plugin-react": "^6.0.2",
-    "lucide-react": "^1.16.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.15.1"

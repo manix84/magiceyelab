@@ -1,10 +1,11 @@
-import { Grid3X3, Image, Layers3 } from "lucide-react";
+import { mdiImageMultiple, mdiLayersTriple, mdiViewGrid } from "@mdi/js";
 import { NavLink, Outlet } from "react-router-dom";
+import { MdiIcon } from "../icons/MdiIcon";
 
 const navigation = [
-  { to: "/generator", label: "Generator", icon: Image },
-  { to: "/depth-painter", label: "Depth Painter", icon: Layers3 },
-  { to: "/pattern-maker", label: "Pattern Maker", icon: Grid3X3 },
+  { to: "/generator", label: "Generator", icon: mdiImageMultiple },
+  { to: "/depth-painter", label: "Depth Painter", icon: mdiLayersTriple },
+  { to: "/pattern-maker", label: "Pattern Maker", icon: mdiViewGrid },
 ];
 
 export function AppLayout() {
@@ -22,9 +23,9 @@ export function AppLayout() {
         </a>
 
         <nav className="primary-nav" aria-label="Primary navigation">
-          {navigation.map(({ to, label, icon: Icon }) => (
+          {navigation.map(({ to, label, icon }) => (
             <NavLink key={to} to={to}>
-              <Icon size={18} aria-hidden="true" />
+              <MdiIcon path={icon} />
               <span>{label}</span>
             </NavLink>
           ))}

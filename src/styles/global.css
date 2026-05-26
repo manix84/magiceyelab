@@ -195,6 +195,25 @@ a {
   accent-color: #285c61;
 }
 
+.range-field {
+  min-width: 0;
+}
+
+.range-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.range-label output {
+  min-width: 3.5rem;
+  color: #285c61;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: right;
+}
+
 .primary-action {
   color: #ffffff;
   border-color: #285c61;

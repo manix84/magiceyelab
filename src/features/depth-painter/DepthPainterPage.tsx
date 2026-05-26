@@ -1,6 +1,7 @@
-import { Brush, Eraser, RotateCcw, RotateCw, Trash2 } from "lucide-react";
+import { mdiBrush, mdiEraser, mdiRedo, mdiTrashCanOutline, mdiUndo } from "@mdi/js";
 import { CanvasPlaceholder } from "../../components/canvas/CanvasPlaceholder";
 import { FieldGroup } from "../../components/controls/FieldGroup";
+import { MdiIcon } from "../../components/icons/MdiIcon";
 import { PageHeader } from "../../components/layout/PageHeader";
 
 export function DepthPainterPage() {
@@ -17,11 +18,11 @@ export function DepthPainterPage() {
           <FieldGroup title="Tools">
             <div className="segmented-control" aria-label="Paint tool">
               <button type="button" aria-pressed="true">
-                <Brush size={18} aria-hidden="true" />
+                <MdiIcon path={mdiBrush} />
                 Brush
               </button>
               <button type="button" aria-pressed="false">
-                <Eraser size={18} aria-hidden="true" />
+                <MdiIcon path={mdiEraser} />
                 Eraser
               </button>
             </div>
@@ -40,13 +41,13 @@ export function DepthPainterPage() {
 
           <div className="icon-row" aria-label="History controls">
             <button type="button" aria-label="Undo">
-              <RotateCcw size={18} aria-hidden="true" />
+              <MdiIcon path={mdiUndo} />
             </button>
             <button type="button" aria-label="Redo">
-              <RotateCw size={18} aria-hidden="true" />
+              <MdiIcon path={mdiRedo} />
             </button>
             <button type="button" aria-label="Clear canvas">
-              <Trash2 size={18} aria-hidden="true" />
+              <MdiIcon path={mdiTrashCanOutline} />
             </button>
           </div>
         </aside>

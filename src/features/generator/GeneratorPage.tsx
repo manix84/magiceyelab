@@ -1,9 +1,14 @@
-import { Download, ImageUp, SlidersHorizontal } from "lucide-react";
+import { useState } from "react";
+import { mdiDownload, mdiImagePlus, mdiTuneVariant } from "@mdi/js";
 import { CanvasPlaceholder } from "../../components/canvas/CanvasPlaceholder";
 import { FieldGroup } from "../../components/controls/FieldGroup";
+import { MdiIcon } from "../../components/icons/MdiIcon";
 import { PageHeader } from "../../components/layout/PageHeader";
 
 export function GeneratorPage() {
+  const [depthStrength, setDepthStrength] = useState(45);
+  const [repeatWidth, setRepeatWidth] = useState(120);
+
   return (
     <div className="workspace">
       <PageHeader
@@ -16,32 +21,50 @@ export function GeneratorPage() {
         <aside className="tool-panel" aria-label="Generator controls">
           <FieldGroup title="Sources">
             <button type="button">
-              <ImageUp size={18} aria-hidden="true" />
+              <MdiIcon path={mdiImagePlus} />
               Import depth map
             </button>
             <button type="button">
-              <ImageUp size={18} aria-hidden="true" />
+              <MdiIcon path={mdiImagePlus} />
               Import pattern
             </button>
           </FieldGroup>
 
           <FieldGroup title="Render">
-            <label>
-              Depth strength
-              <input type="range" min="0" max="100" defaultValue="45" />
+            <label className="range-field">
+              <span className="range-label">
+                <span>Depth strength</span>
+                <output>{depthStrength}%</output>
+              </span>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={depthStrength}
+                onChange={(event) => setDepthStrength(Number(event.target.value))}
+              />
             </label>
-            <label>
-              Repeat width
-              <input type="range" min="48" max="240" defaultValue="120" />
+            <label className="range-field">
+              <span className="range-label">
+                <span>Repeat width</span>
+                <output>{repeatWidth}px</output>
+              </span>
+              <input
+                type="range"
+                min="48"
+                max="240"
+                value={repeatWidth}
+                onChange={(event) => setRepeatWidth(Number(event.target.value))}
+              />
             </label>
             <button type="button">
-              <SlidersHorizontal size={18} aria-hidden="true" />
+              <MdiIcon path={mdiTuneVariant} />
               Preview render
             </button>
           </FieldGroup>
 
           <button className="primary-action" type="button">
-            <Download size={18} aria-hidden="true" />
+            <MdiIcon path={mdiDownload} />
             Export PNG
           </button>
         </aside>

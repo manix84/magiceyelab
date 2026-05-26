@@ -1,6 +1,7 @@
-import { Brush, Dices, Eraser, Palette } from "lucide-react";
+import { mdiBrush, mdiDiceMultiple, mdiEraser, mdiPalette } from "@mdi/js";
 import { CanvasPlaceholder } from "../../components/canvas/CanvasPlaceholder";
 import { FieldGroup } from "../../components/controls/FieldGroup";
+import { MdiIcon } from "../../components/icons/MdiIcon";
 import { PageHeader } from "../../components/layout/PageHeader";
 
 const palette = ["#1d3557", "#e63946", "#f1faee", "#2a9d8f", "#f4a261"];
@@ -19,11 +20,11 @@ export function PatternMakerPage() {
           <FieldGroup title="Tools">
             <div className="segmented-control" aria-label="Pattern tool">
               <button type="button" aria-pressed="true">
-                <Brush size={18} aria-hidden="true" />
+                <MdiIcon path={mdiBrush} />
                 Brush
               </button>
               <button type="button" aria-pressed="false">
-                <Eraser size={18} aria-hidden="true" />
+                <MdiIcon path={mdiEraser} />
                 Eraser
               </button>
             </div>
@@ -41,13 +42,13 @@ export function PatternMakerPage() {
               ))}
             </div>
             <button type="button">
-              <Palette size={18} aria-hidden="true" />
+              <MdiIcon path={mdiPalette} />
               Edit palette
             </button>
           </FieldGroup>
 
           <button className="primary-action" type="button">
-            <Dices size={18} aria-hidden="true" />
+            <MdiIcon path={mdiDiceMultiple} />
             Random pattern
           </button>
         </aside>
