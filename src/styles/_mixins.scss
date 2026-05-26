@@ -1,6 +1,7 @@
 @mixin workspace {
   display: grid;
   gap: 1.5rem;
+  min-width: 0;
   max-width: 1440px;
   margin: 0 auto;
 }
@@ -19,6 +20,7 @@
 @mixin tool-panel {
   display: grid;
   gap: 1rem;
+  min-width: 0;
   border: 1px solid #ded9cc;
   border-radius: 8px;
   padding: 1rem;

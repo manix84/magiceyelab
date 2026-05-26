@@ -15,11 +15,13 @@
 .textField {
   display: grid;
   gap: 0.45rem;
+  min-width: 0;
   color: #343633;
   font-size: 0.9rem;
   font-weight: 700;
 
   input {
+    min-width: 0;
     width: 100%;
     min-height: 2.5rem;
     border: 1px solid #c8c5bb;
@@ -50,6 +52,10 @@ label.fileButton {
   color: #202124;
   background: #ffffff;
   cursor: pointer;
+
+  span {
+    min-width: 0;
+  }
 
   svg {
     flex: 0 0 auto;
@@ -99,6 +105,10 @@ label.fileButton {
 
 .rangeField {
   min-width: 0;
+
+  input {
+    min-width: 0;
+  }
 }
 
 .rangeLabel {
