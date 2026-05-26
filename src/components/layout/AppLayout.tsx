@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { mdiImageMultiple, mdiLayersTriple, mdiViewGrid } from "@mdi/js";
 import { NavLink, Outlet } from "react-router-dom";
 import { MdiIcon } from "../icons/MdiIcon";
@@ -9,9 +10,22 @@ const navigation = [
 ];
 
 export function AppLayout() {
+  const [hasScrolled, setHasScrolled] = useState(false);
+
+  useEffect(() => {
+    function updateHeaderState() {
+      setHasScrolled(window.scrollY > 8);
+    }
+
+    updateHeaderState();
+    window.addEventListener("scroll", updateHeaderState, { passive: true });
+
+    return () => window.removeEventListener("scroll", updateHeaderState);
+  }, []);
+
   return (
     <div className="app-shell">
-      <header className="app-header">
+      <header className={`app-header${hasScrolled ? " app-header-scrolled" : ""}`}>
         <a className="brand" href="/" aria-label="MagicEyeLab home">
           <span className="brand-mark" aria-hidden="true">
             M
