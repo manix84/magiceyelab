@@ -1,0 +1,27 @@
+@use "../../styles/mixins";
+
+.workspace {
+  @include mixins.workspace;
+}
+
+.workspaceGrid {
+  @include mixins.workspace-grid;
+}
+
+.toolPanel {
+  @include mixins.tool-panel;
+}
+
+.segmentedControl {
+  @include mixins.segmented-control;
+}
+
+.iconRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.previewArea {
+  @include mixins.preview-area;
+}

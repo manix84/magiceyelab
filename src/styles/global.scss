@@ -1,0 +1,155 @@
+:root {
+  color-scheme: light;
+  --color-page: #f7f5ef;
+  --color-page-rgb: 247, 245, 239;
+  --color-surface: #ffffff;
+  --color-surface-rgb: 255, 255, 255;
+  --color-surface-subtle: #fbfaf7;
+  --color-text: #202124;
+  --color-heading: #17191a;
+  --color-muted: #60615d;
+  --color-copy: #525450;
+  --color-label: #343633;
+  --color-control-text: #202124;
+  --color-border: #c8c5bb;
+  --color-border-soft: #ded9cc;
+  --color-border-muted: #d8d4ca;
+  --color-accent: #285c61;
+  --color-accent-rgb: 40, 92, 97;
+  --color-on-accent: #ffffff;
+  --color-accent-strong: #102f32;
+  --color-accent-soft: #dcebe6;
+  --color-accent-soft-rgb: 220, 235, 230;
+  --color-danger: #a4453d;
+  --color-danger-strong: #6d2721;
+  --color-danger-rgb: 164, 69, 61;
+  --color-preview: #173f43;
+  --color-preview-border: #143236;
+  --color-preview-text: #f7f5ef;
+  --color-preview-panel: rgba(20, 50, 54, 0.86);
+  --shadow-soft: rgba(23, 25, 26, 0.12);
+  color: var(--color-text);
+  background: var(--color-page);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  font-synthesis: none;
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-page: #111716;
+  --color-page-rgb: 17, 23, 22;
+  --color-surface: #19211f;
+  --color-surface-rgb: 25, 33, 31;
+  --color-surface-subtle: #151c1a;
+  --color-text: #eef3ef;
+  --color-heading: #fbfdf9;
+  --color-muted: #aab7b0;
+  --color-copy: #c2cbc5;
+  --color-label: #e3ebe5;
+  --color-control-text: #eef3ef;
+  --color-border: #3d4945;
+  --color-border-soft: #2c3834;
+  --color-border-muted: #36423e;
+  --color-accent: #78c6ba;
+  --color-accent-rgb: 120, 198, 186;
+  --color-on-accent: #0b1715;
+  --color-accent-strong: #e0fff8;
+  --color-accent-soft: #183b39;
+  --color-accent-soft-rgb: 24, 59, 57;
+  --color-danger: #ff9a8f;
+  --color-danger-strong: #ffd5d0;
+  --color-danger-rgb: 255, 154, 143;
+  --color-preview: #0f3134;
+  --color-preview-border: #245d62;
+  --color-preview-text: #f7f5ef;
+  --color-preview-panel: rgba(10, 28, 30, 0.88);
+  --shadow-soft: rgba(0, 0, 0, 0.34);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --color-page: #111716;
+    --color-page-rgb: 17, 23, 22;
+    --color-surface: #19211f;
+    --color-surface-rgb: 25, 33, 31;
+    --color-surface-subtle: #151c1a;
+    --color-text: #eef3ef;
+    --color-heading: #fbfdf9;
+    --color-muted: #aab7b0;
+    --color-copy: #c2cbc5;
+    --color-label: #e3ebe5;
+    --color-control-text: #eef3ef;
+    --color-border: #3d4945;
+    --color-border-soft: #2c3834;
+    --color-border-muted: #36423e;
+    --color-accent: #78c6ba;
+    --color-accent-rgb: 120, 198, 186;
+    --color-on-accent: #0b1715;
+    --color-accent-strong: #e0fff8;
+    --color-accent-soft: #183b39;
+    --color-accent-soft-rgb: 24, 59, 57;
+    --color-danger: #ff9a8f;
+    --color-danger-strong: #ffd5d0;
+    --color-danger-rgb: 255, 154, 143;
+    --color-preview: #0f3134;
+    --color-preview-border: #245d62;
+    --color-preview-text: #f7f5ef;
+    --color-preview-panel: rgba(10, 28, 30, 0.88);
+    --shadow-soft: rgba(0, 0, 0, 0.34);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--color-page);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.65rem 0.8rem;
+  color: var(--color-control-text);
+  background: var(--color-surface);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--color-accent);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  &:disabled:hover {
+    border-color: var(--color-border);
+  }
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}

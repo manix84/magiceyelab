@@ -1,3 +1,5 @@
+import styles from "./PageHeader.module.scss";
+
 type PageHeaderProps = {
   eyebrow: string;
   title: string;
@@ -6,7 +8,7 @@ type PageHeaderProps = {
 
 export function PageHeader({ eyebrow, title, description }: PageHeaderProps) {
   return (
-    <header className="page-header">
+    <header className={styles.header}>
       <p>{eyebrow}</p>
       <h1>{title}</h1>
       <span>{description}</span>

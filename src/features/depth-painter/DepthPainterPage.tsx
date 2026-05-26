@@ -3,20 +3,21 @@ import { CanvasPlaceholder } from "../../components/canvas/CanvasPlaceholder";
 import { FieldGroup } from "../../components/controls/FieldGroup";
 import { MdiIcon } from "../../components/icons/MdiIcon";
 import { PageHeader } from "../../components/layout/PageHeader";
+import styles from "./DepthPainterPage.module.scss";
 
 export function DepthPainterPage() {
   return (
-    <div className="workspace">
+    <div className={styles.workspace}>
       <PageHeader
         eyebrow="Depth Painter"
         title="Paint monochrome depth maps"
         description="White areas come forward, black areas recede, and mid-gray sits between them."
       />
 
-      <div className="workspace-grid">
-        <aside className="tool-panel" aria-label="Depth painter controls">
+      <div className={styles.workspaceGrid}>
+        <aside className={styles.toolPanel} aria-label="Depth painter controls">
           <FieldGroup title="Tools">
-            <div className="segmented-control" aria-label="Paint tool">
+            <div className={styles.segmentedControl} aria-label="Paint tool">
               <button type="button" aria-pressed="true">
                 <MdiIcon path={mdiBrush} />
                 Brush
@@ -39,7 +40,7 @@ export function DepthPainterPage() {
             </label>
           </FieldGroup>
 
-          <div className="icon-row" aria-label="History controls">
+          <div className={styles.iconRow} aria-label="History controls">
             <button type="button" aria-label="Undo">
               <MdiIcon path={mdiUndo} />
             </button>
@@ -52,7 +53,7 @@ export function DepthPainterPage() {
           </div>
         </aside>
 
-        <section className="preview-area" aria-label="Depth map canvas">
+        <section className={styles.previewArea} aria-label="Depth map canvas">
           <CanvasPlaceholder label="Depth map canvas" />
         </section>
       </div>

@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
+import styles from "./FieldGroup.module.scss";
 
 type FieldGroupProps = {
   title: string;
@@ -6,9 +7,11 @@ type FieldGroupProps = {
 };
 
 export function FieldGroup({ title, children }: FieldGroupProps) {
+  const headingId = useId();
+
   return (
-    <section className="field-group" aria-labelledby={`${title}-heading`}>
-      <h2 id={`${title}-heading`}>{title}</h2>
+    <section className={styles.group} aria-labelledby={headingId}>
+      <h2 id={headingId}>{title}</h2>
       {children}
     </section>
   );

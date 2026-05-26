@@ -1,0 +1,50 @@
+@mixin workspace {
+  display: grid;
+  gap: 1.5rem;
+  min-width: 0;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+@mixin workspace-grid {
+  display: grid;
+  grid-template-columns: minmax(16rem, 20rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+
+  @media (max-width: 840px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+@mixin tool-panel {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 8px;
+  padding: 1rem;
+  background: var(--color-surface);
+}
+
+@mixin preview-area {
+  min-width: 0;
+}
+
+@mixin primary-action {
+  color: var(--color-on-accent);
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+@mixin segmented-control {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+
+  button[aria-pressed="true"] {
+    border-color: var(--color-accent);
+    color: var(--color-accent-strong);
+    background: var(--color-accent-soft);
+  }
+}

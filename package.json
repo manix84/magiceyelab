@@ -1,6 +1,6 @@
 {
   "name": "magiceyelab",
-  "version": "1.4.0",
+  "version": "3.11.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,10 +8,18 @@
     "build": "tsc -b && vite build",
     "build:dry-run": "npm run build",
     "preview": "vite preview",
+    "test": "vitest run --project unit",
+    "test:watch": "vitest --project unit",
+    "test:coverage": "vitest run --project unit --coverage",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "test:storybook": "test-storybook --url http://127.0.0.1:6006",
+    "test:storybook:ci": "start-server-and-test \"storybook dev -p 6006 --ci --host 127.0.0.1\" http://127.0.0.1:6006 \"test-storybook --url http://127.0.0.1:6006\"",
+    "test:storybook:vitest": "vitest --project storybook run",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "check": "npm run lint && npm run typecheck && npm run build:dry-run",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run build:dry-run",
     "precommit:staged": "node scripts/pre-commit-staged-checks.mjs",
     "version:bump": "node scripts/smart-version-bump.mjs"
   },
@@ -19,20 +27,45 @@
     "@mdi/js": "^7.4.47",
     "@mdi/react": "^1.6.1",
     "@vitejs/plugin-react": "^6.0.2",
+    "classnames": "^2.5.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.15.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@storybook/addon-a11y": "^10.4.1",
+    "@storybook/addon-vitest": "^10.4.1",
+    "@storybook/react-vite": "^10.4.1",
+    "@storybook/test-runner": "^0.24.4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
+    "@vitest/coverage-v8": "^4.1.7",
+    "axe-playwright": "^2.2.2",
     "eslint": "^10.4.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
+    "jsdom": "^29.1.1",
+    "mockdate": "^3.0.5",
+    "msw": "^2.14.6",
+    "msw-storybook-addon": "^2.0.7",
+    "sass": "^1.100.0",
+    "start-server-and-test": "^3.0.5",
+    "storybook": "^10.4.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.60.0",
-    "vite": "^8.0.14"
+    "vite": "^8.0.14",
+    "vitest": "^4.1.7",
+    "playwright": "^1.60.0",
+    "@vitest/browser-playwright": "^4.1.7"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }
