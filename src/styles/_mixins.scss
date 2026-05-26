@@ -21,10 +21,10 @@
   display: grid;
   gap: 1rem;
   min-width: 0;
-  border: 1px solid #ded9cc;
+  border: 1px solid var(--color-border-soft);
   border-radius: 8px;
   padding: 1rem;
-  background: #ffffff;
+  background: var(--color-surface);
 }
 
 @mixin preview-area {
@@ -32,9 +32,9 @@
 }
 
 @mixin primary-action {
-  color: #ffffff;
-  border-color: #285c61;
-  background: #285c61;
+  color: var(--color-on-accent);
+  border-color: var(--color-accent);
+  background: var(--color-accent);
 }
 
 @mixin segmented-control {
@@ -43,8 +43,8 @@
   gap: 0.4rem;
 
   button[aria-pressed="true"] {
-    border-color: #285c61;
-    color: #102f32;
-    background: #dcebe6;
+    border-color: var(--color-accent);
+    color: var(--color-accent-strong);
+    background: var(--color-accent-soft);
   }
 }

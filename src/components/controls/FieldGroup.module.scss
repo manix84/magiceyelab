@@ -4,19 +4,19 @@
 
   h2 {
     margin: 0;
-    color: #343633;
+    color: var(--color-label);
     font-size: 0.9rem;
   }
 
   label {
     display: grid;
     gap: 0.45rem;
-    color: #444844;
+    color: var(--color-copy);
     font-size: 0.9rem;
   }
 
   input[type="range"] {
     width: 100%;
-    accent-color: #285c61;
+    accent-color: var(--color-accent);
   }
 }

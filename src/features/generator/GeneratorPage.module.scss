@@ -16,7 +16,7 @@
   display: grid;
   gap: 0.45rem;
   min-width: 0;
-  color: #343633;
+  color: var(--color-label);
   font-size: 0.9rem;
   font-weight: 700;
 
@@ -24,15 +24,15 @@
     min-width: 0;
     width: 100%;
     min-height: 2.5rem;
-    border: 1px solid #c8c5bb;
+    border: 1px solid var(--color-border);
     border-radius: 8px;
     padding: 0.55rem 0.7rem;
-    color: #202124;
-    background: #ffffff;
+    color: var(--color-control-text);
+    background: var(--color-surface);
 
     &:focus {
-      border-color: #285c61;
-      outline: 2px solid rgba(40, 92, 97, 0.18);
+      border-color: var(--color-accent);
+      outline: 2px solid rgba(var(--color-accent-rgb), 0.18);
     }
   }
 }
@@ -46,11 +46,11 @@ label.fileButton {
   width: 100%;
   min-height: 2.75rem;
   overflow: hidden;
-  border: 1px solid #c8c5bb;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 0.65rem 0.8rem;
-  color: #202124;
-  background: #ffffff;
+  color: var(--color-control-text);
+  background: var(--color-surface);
   cursor: pointer;
 
   span {
@@ -63,11 +63,11 @@ label.fileButton {
 
   &:hover,
   &:focus-within {
-    border-color: #285c61;
+    border-color: var(--color-accent);
   }
 
   &:focus-within {
-    outline: 2px solid rgba(40, 92, 97, 0.18);
+    outline: 2px solid rgba(var(--color-accent-rgb), 0.18);
     outline-offset: 2px;
   }
 
@@ -98,13 +98,13 @@ label.dropZone {
   gap: 0.75rem;
   min-height: 6rem;
   overflow: hidden;
-  border: 1px dashed #b8b2a6;
+  border: 1px dashed var(--color-border);
   border-radius: 8px;
   padding: 0.85rem;
-  color: #202124;
+  color: var(--color-control-text);
   background:
-    linear-gradient(135deg, rgba(40, 92, 97, 0.07), transparent 42%),
-    #ffffff;
+    linear-gradient(135deg, rgba(var(--color-accent-rgb), 0.07), transparent 42%),
+    var(--color-surface);
   cursor: pointer;
   transition:
     border-color 160ms ease,
@@ -114,17 +114,17 @@ label.dropZone {
 
   svg {
     flex: 0 0 auto;
-    color: #285c61;
+    color: var(--color-accent);
   }
 
   .dropThumbnail {
     width: 3.5rem;
     height: 3.5rem;
-    border: 1px solid rgba(40, 92, 97, 0.18);
+    border: 1px solid rgba(var(--color-accent-rgb), 0.18);
     border-radius: 6px;
     object-fit: cover;
-    background: #f7f5ef;
-    box-shadow: 0 1px 3px rgba(23, 25, 26, 0.12);
+    background: var(--color-page);
+    box-shadow: 0 1px 3px var(--shadow-soft);
   }
 
   span {
@@ -140,18 +140,18 @@ label.dropZone {
   }
 
   small {
-    color: #60615d;
+    color: var(--color-muted);
     line-height: 1.3;
   }
 
   &:hover,
   &:focus-within {
-    border-color: #285c61;
-    box-shadow: 0 0 0 2px rgba(40, 92, 97, 0.12);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px rgba(var(--color-accent-rgb), 0.12);
   }
 
   &:focus-within {
-    outline: 2px solid rgba(40, 92, 97, 0.18);
+    outline: 2px solid rgba(var(--color-accent-rgb), 0.18);
     outline-offset: 2px;
   }
 
@@ -164,24 +164,24 @@ label.dropZone {
 }
 
 .dragActive {
-  border-color: #285c61;
+  border-color: var(--color-accent);
   background:
-    linear-gradient(135deg, rgba(40, 92, 97, 0.14), transparent 48%),
-    #edf7f3;
-  box-shadow: 0 0 0 3px rgba(40, 92, 97, 0.14);
+    linear-gradient(135deg, rgba(var(--color-accent-rgb), 0.14), transparent 48%),
+    var(--color-accent-soft);
+  box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.14);
 }
 
 .dragRejected {
-  border-color: #a4453d;
-  color: #6d2721;
+  border-color: var(--color-danger);
+  color: var(--color-danger-strong);
   background:
-    linear-gradient(135deg, rgba(164, 69, 61, 0.12), transparent 48%),
-    #fff8f6;
-  box-shadow: 0 0 0 3px rgba(164, 69, 61, 0.12);
+    linear-gradient(135deg, rgba(var(--color-danger-rgb), 0.12), transparent 48%),
+    var(--color-surface-subtle);
+  box-shadow: 0 0 0 3px rgba(var(--color-danger-rgb), 0.12);
 
   svg,
   small {
-    color: #a4453d;
+    color: var(--color-danger);
   }
 }
 
@@ -194,18 +194,18 @@ label.dropZone {
 
 .sourceFile {
   overflow: hidden;
-  color: #60615d;
+  color: var(--color-muted);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .sourceNote {
-  color: #285c61;
+  color: var(--color-accent);
   line-height: 1.35;
 }
 
 .formError {
-  color: #a4453d;
+  color: var(--color-danger);
   font-weight: 700;
 }
 
@@ -225,7 +225,7 @@ label.dropZone {
 
   output {
     min-width: 3.5rem;
-    color: #285c61;
+    color: var(--color-accent);
     font-variant-numeric: tabular-nums;
     font-weight: 700;
     text-align: right;
@@ -240,10 +240,10 @@ label.toggleField {
   gap: 0.75rem;
   width: 100%;
   min-height: 2.75rem;
-  border: 1px solid #d8d4ca;
+  border: 1px solid var(--color-border-muted);
   border-radius: 8px;
   padding: 0.65rem 0.8rem;
-  background: #fbfaf7;
+  background: var(--color-surface-subtle);
   cursor: pointer;
 
   input {
@@ -255,8 +255,8 @@ label.toggleField {
     pointer-events: none;
 
     &:checked + .toggleSwitch {
-      border-color: #285c61;
-      background: #285c61;
+      border-color: var(--color-accent);
+      background: var(--color-accent);
 
       &::after {
         transform: translateX(1.1rem);
@@ -264,7 +264,7 @@ label.toggleField {
     }
 
     &:focus-visible + .toggleSwitch {
-      outline: 2px solid rgba(40, 92, 97, 0.24);
+      outline: 2px solid rgba(var(--color-accent-rgb), 0.24);
       outline-offset: 3px;
     }
   }
@@ -275,10 +275,10 @@ label.toggleField {
   flex: 0 0 auto;
   width: 2.55rem;
   height: 1.45rem;
-  border: 1px solid #b9b4a8;
+  border: 1px solid var(--color-border);
   border-radius: 999px;
-  background: #eeeae0;
-  box-shadow: inset 0 1px 2px rgba(23, 25, 26, 0.12);
+  background: var(--color-border-soft);
+  box-shadow: inset 0 1px 2px var(--shadow-soft);
   transition:
     border-color 160ms ease,
     background-color 160ms ease;
@@ -289,8 +289,8 @@ label.toggleField {
     height: 1.05rem;
     margin: 0.14rem;
     border-radius: 50%;
-    background: #ffffff;
-    box-shadow: 0 1px 4px rgba(23, 25, 26, 0.22);
+    background: var(--color-surface);
+    box-shadow: 0 1px 4px var(--shadow-soft);
     content: "";
     transition: transform 160ms ease;
   }
@@ -314,9 +314,9 @@ label.toggleField {
   min-height: clamp(24rem, 58vh, 42rem);
   overflow: hidden;
   place-items: center;
-  border: 1px solid #143236;
+  border: 1px solid var(--color-preview-border);
   border-radius: 8px;
-  background: #173f43;
+  background: var(--color-preview);
 }
 
 .stereogramCanvas {
@@ -332,7 +332,7 @@ label.toggleField {
   display: grid;
   place-items: center;
   padding: 1rem;
-  color: #f7f5ef;
+  color: var(--color-preview-text);
   background-image:
     linear-gradient(90deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px),
     linear-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
@@ -341,7 +341,7 @@ label.toggleField {
   span {
     border-radius: 8px;
     padding: 0.6rem 0.8rem;
-    background: rgba(20, 50, 54, 0.86);
+    background: var(--color-preview-panel);
     font-weight: 700;
     text-align: center;
   }

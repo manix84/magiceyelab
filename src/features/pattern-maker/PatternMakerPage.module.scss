@@ -23,8 +23,8 @@
 
   button {
     min-height: 2.35rem;
-    border-color: #ffffff;
-    box-shadow: 0 0 0 1px #c8c5bb;
+    border-color: var(--color-surface);
+    box-shadow: 0 0 0 1px var(--color-border);
   }
 }
 

@@ -4,31 +4,31 @@
   min-height: clamp(24rem, 58vh, 42rem);
   overflow: hidden;
   place-items: center;
-  border: 1px solid #d2cfc5;
+  border: 1px solid var(--color-border-soft);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--color-surface);
 
   span {
     position: relative;
     border-radius: 8px;
     padding: 0.6rem 0.8rem;
     color: inherit;
-    background: rgba(255, 255, 255, 0.84);
+    background: rgba(var(--color-surface-rgb), 0.84);
     font-weight: 700;
   }
 }
 
 .dark {
-  color: #f7f5ef;
-  border-color: #143236;
-  background: #173f43;
+  color: var(--color-preview-text);
+  border-color: var(--color-preview-border);
+  background: var(--color-preview);
 
   .grid {
     color: rgba(255, 255, 255, 0.12);
   }
 
   span {
-    background: rgba(20, 50, 54, 0.86);
+    background: var(--color-preview-panel);
   }
 }
 
@@ -40,5 +40,5 @@
     linear-gradient(90deg, currentColor 1px, transparent 1px),
     linear-gradient(currentColor 1px, transparent 1px);
   background-size: 32px 32px;
-  color: rgba(40, 92, 97, 0.16);
+  color: rgba(var(--color-accent-rgb), 0.16);
 }

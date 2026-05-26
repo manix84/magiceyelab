@@ -10,7 +10,7 @@
   }
 
   p {
-    color: #a4453d;
+    color: var(--color-danger);
     font-size: 0.85rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -19,7 +19,7 @@
   h1 {
     min-width: 0;
     max-width: 16ch;
-    color: #17191a;
+    color: var(--color-heading);
     font-size: clamp(2rem, 6vw, 4.5rem);
     line-height: 0.95;
   }
@@ -28,7 +28,7 @@
     display: block;
     min-width: 0;
     max-width: 54rem;
-    color: #525450;
+    color: var(--color-copy);
     font-size: 1.05rem;
   }
 }
