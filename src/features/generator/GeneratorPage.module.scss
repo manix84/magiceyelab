@@ -322,7 +322,8 @@ label.toggleField {
 .stereogramCanvas {
   display: block;
   width: 100%;
-  height: 100%;
+  height: auto;
+  max-height: clamp(24rem, 58vh, 42rem);
   object-fit: contain;
 }
 

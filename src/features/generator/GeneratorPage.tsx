@@ -17,7 +17,8 @@ import { defaultStereogramSettings } from "../../lib/stereogram/settings";
 import { renderStereogram } from "../../lib/stereogram/renderStereogram";
 import styles from "./GeneratorPage.module.scss";
 
-const maxPreviewWidth = 1200;
+const maxPreviewEdge = 1200;
+const maxPreviewPixels = 900_000;
 const exportNamePlaceholder = "magiceye_DD-MM-YYYY_hh-mm-ss.png";
 type ImportSource = "depth" | "pattern";
 
@@ -62,8 +63,17 @@ function hasSupportedDraggedFile(dataTransfer: DataTransfer) {
 }
 
 function getPreviewSize(image: HTMLImageElement) {
-  const width = Math.min(maxPreviewWidth, image.naturalWidth);
-  const height = Math.max(1, Math.round(width / (image.naturalWidth / image.naturalHeight)));
+  const edgeScale = Math.min(
+    1,
+    maxPreviewEdge / Math.max(image.naturalWidth, image.naturalHeight),
+  );
+  const pixelScale = Math.min(
+    1,
+    Math.sqrt(maxPreviewPixels / (image.naturalWidth * image.naturalHeight)),
+  );
+  const scale = Math.min(edgeScale, pixelScale);
+  const width = Math.max(1, Math.round(image.naturalWidth * scale));
+  const height = Math.max(1, Math.round(image.naturalHeight * scale));
 
   return { width, height };
 }
@@ -86,6 +96,8 @@ export function GeneratorPage() {
   const [patternThumbnailUrl, setPatternThumbnailUrl] = useState("");
   const depthThumbnailUrlRef = useRef("");
   const patternThumbnailUrlRef = useRef("");
+  const depthImportRequestRef = useRef(0);
+  const patternImportRequestRef = useRef(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const imageAccept = supportedImageTypes.join(",");
@@ -136,6 +148,8 @@ export function GeneratorPage() {
   }
 
   async function importPatternFile(file: File) {
+    const requestId = patternImportRequestRef.current + 1;
+    patternImportRequestRef.current = requestId;
     const validationError = getImageValidationError(file);
 
     if (validationError) {
@@ -146,11 +160,20 @@ export function GeneratorPage() {
 
     try {
       const image = await loadImageFile(file);
+
+      if (patternImportRequestRef.current !== requestId) {
+        return;
+      }
+
       setPatternImage(image);
       setPatternFileName(file.name);
       replacePatternThumbnail(file);
       setPatternImportError("");
     } catch (error) {
+      if (patternImportRequestRef.current !== requestId) {
+        return;
+      }
+
       clearPatternImport();
       setPatternImportError(
         error instanceof Error ? error.message : "Could not load image.",
@@ -159,6 +182,8 @@ export function GeneratorPage() {
   }
 
   async function importDepthFile(file: File) {
+    const requestId = depthImportRequestRef.current + 1;
+    depthImportRequestRef.current = requestId;
     const validationError = getImageValidationError(file);
 
     if (validationError) {
@@ -170,12 +195,21 @@ export function GeneratorPage() {
     try {
       const image = await loadImageFile(file);
       const inference = await inferDepthMap(image);
+
+      if (depthImportRequestRef.current !== requestId) {
+        return;
+      }
+
       setDepthImage(inference.image);
       setDepthFileName(file.name);
       setDepthInferenceMessage(inference.message);
       replaceDepthThumbnail(file);
       setDepthImportError("");
     } catch (error) {
+      if (depthImportRequestRef.current !== requestId) {
+        return;
+      }
+
       clearDepthImport();
       setDepthImportError(
         error instanceof Error ? error.message : "Could not load image.",

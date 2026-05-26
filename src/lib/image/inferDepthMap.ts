@@ -173,7 +173,7 @@ async function inferDepthFromPhoto(image: HTMLImageElement) {
 
 async function inferDepthFromStereoPair(image: HTMLImageElement) {
   const sourceHalfWidth = Math.floor(image.naturalWidth / 2);
-  const width = Math.min(640, sourceHalfWidth);
+  const width = Math.min(420, sourceHalfWidth);
   const height = Math.max(1, Math.round(width / (sourceHalfWidth / image.naturalHeight)));
   const { context: leftContext } = createCanvas(width, height);
   const { context: rightContext } = createCanvas(width, height);
@@ -195,7 +195,7 @@ async function inferDepthFromStereoPair(image: HTMLImageElement) {
   const leftPixels = leftContext.getImageData(0, 0, width, height).data;
   const rightPixels = rightContext.getImageData(0, 0, width, height).data;
   const outputPixels = outputContext.createImageData(width, height);
-  const maxDisparity = Math.max(6, Math.round(width * 0.09));
+  const maxDisparity = Math.max(4, Math.round(width * 0.055));
   const radius = 1;
 
   function luminance(data: Uint8ClampedArray, x: number, y: number) {
@@ -208,29 +208,36 @@ async function inferDepthFromStereoPair(image: HTMLImageElement) {
       let bestDisparity = 0;
       let bestScore = Number.POSITIVE_INFINITY;
 
-      for (let disparity = 0; disparity <= maxDisparity; disparity += 1) {
-        const rightX = x - disparity;
+      for (const direction of [-1, 1]) {
+        for (let disparity = 0; disparity <= maxDisparity; disparity += 1) {
+          const rightX = x + direction * disparity;
 
-        if (rightX < radius || x < radius || x >= width - radius) {
-          continue;
-        }
-
-        let score = 0;
-
-        for (let offsetY = -radius; offsetY <= radius; offsetY += 1) {
-          const sampleY = Math.max(0, Math.min(height - 1, y + offsetY));
-
-          for (let offsetX = -radius; offsetX <= radius; offsetX += 1) {
-            score += Math.abs(
-              luminance(leftPixels, x + offsetX, sampleY) -
-                luminance(rightPixels, rightX + offsetX, sampleY),
-            );
+          if (
+            rightX < radius ||
+            rightX >= width - radius ||
+            x < radius ||
+            x >= width - radius
+          ) {
+            continue;
           }
-        }
 
-        if (score < bestScore) {
-          bestScore = score;
-          bestDisparity = disparity;
+          let score = 0;
+
+          for (let offsetY = -radius; offsetY <= radius; offsetY += 1) {
+            const sampleY = Math.max(0, Math.min(height - 1, y + offsetY));
+
+            for (let offsetX = -radius; offsetX <= radius; offsetX += 1) {
+              score += Math.abs(
+                luminance(leftPixels, x + offsetX, sampleY) -
+                  luminance(rightPixels, rightX + offsetX, sampleY),
+              );
+            }
+          }
+
+          if (score < bestScore) {
+            bestScore = score;
+            bestDisparity = disparity;
+          }
         }
       }
 
@@ -242,7 +249,7 @@ async function inferDepthFromStereoPair(image: HTMLImageElement) {
       outputPixels.data[index + 3] = 255;
     }
 
-    if (y > 0 && y % 12 === 0) {
+    if (y > 0 && y % 8 === 0) {
       await waitForFrame();
     }
   }

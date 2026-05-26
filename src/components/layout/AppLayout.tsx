@@ -8,7 +8,7 @@ import {
   mdiWeatherNight,
   mdiWhiteBalanceSunny,
 } from "@mdi/js";
-import { NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet } from "react-router-dom";
 import logoUrl from "../../assets/magiceyelab-logo.svg";
 import { MdiIcon } from "../icons/MdiIcon";
 import styles from "./AppLayout.module.scss";
@@ -83,13 +83,13 @@ export function AppLayout() {
           [styles.scrolled]: hasScrolled,
         })}
       >
-        <a className={styles.brand} href="/" aria-label="MagicEyeLab home">
+        <Link className={styles.brand} to="/" aria-label="MagicEyeLab home">
           <img className={styles.brandMark} src={logoUrl} alt="" aria-hidden="true" />
           <span>
             <strong>MagicEyeLab</strong>
             <small>Local stereogram studio</small>
           </span>
-        </a>
+        </Link>
 
         <div className={styles.headerActions}>
           <nav className={styles.primaryNav} aria-label="Primary navigation">

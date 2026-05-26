@@ -12,6 +12,7 @@ const maxPatternSampleSize = 512;
 const depthOverlayAlpha = 0.64;
 const contourBandAlpha = 0.36;
 const contourBandWidth = 0.055;
+const imageDataCache = new WeakMap<HTMLImageElement, Map<string, ImageData>>();
 
 function getClampedSize(width: number, height: number, maxSize: number) {
   const scale = Math.min(1, maxSize / Math.max(width, height));
@@ -22,11 +23,7 @@ function getClampedSize(width: number, height: number, maxSize: number) {
   };
 }
 
-function createImageCanvas(
-  image: HTMLImageElement,
-  width: number,
-  height: number,
-) {
+function createImageCanvas(width: number, height: number) {
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d", { willReadFrequently: true });
 
@@ -36,9 +33,27 @@ function createImageCanvas(
 
   canvas.width = width;
   canvas.height = height;
-  context.drawImage(image, 0, 0, width, height);
 
   return { canvas, context };
+}
+
+function getImagePixels(image: HTMLImageElement, width: number, height: number) {
+  const cacheKey = `${width}x${height}`;
+  const imageCache = imageDataCache.get(image) ?? new Map<string, ImageData>();
+  const cachedPixels = imageCache.get(cacheKey);
+
+  if (cachedPixels) {
+    return cachedPixels;
+  }
+
+  const { context } = createImageCanvas(width, height);
+  context.drawImage(image, 0, 0, width, height);
+
+  const pixels = context.getImageData(0, 0, width, height);
+  imageCache.set(cacheKey, pixels);
+  imageDataCache.set(image, imageCache);
+
+  return pixels;
 }
 
 export function renderStereogram({
@@ -64,28 +79,17 @@ export function renderStereogram({
   canvas.width = outputWidth;
   canvas.height = outputHeight;
 
-  const { context: depthContext } = createImageCanvas(
-    depthImage,
-    outputWidth,
-    outputHeight,
-  );
   const patternSize = getClampedSize(
     patternImage.naturalWidth,
     patternImage.naturalHeight,
     maxPatternSampleSize,
   );
-  const { canvas: patternCanvas, context: patternContext } = createImageCanvas(
+
+  const depthPixels = getImagePixels(depthImage, outputWidth, outputHeight);
+  const patternPixels = getImagePixels(
     patternImage,
     patternSize.width,
     patternSize.height,
-  );
-
-  const depthPixels = depthContext.getImageData(0, 0, outputWidth, outputHeight);
-  const patternPixels = patternContext.getImageData(
-    0,
-    0,
-    patternCanvas.width,
-    patternCanvas.height,
   );
   const outputPixels = context.createImageData(outputWidth, outputHeight);
 
@@ -110,9 +114,9 @@ export function renderStereogram({
         continue;
       }
 
-      const patternX = x % patternCanvas.width;
-      const patternY = y % patternCanvas.height;
-      const patternIndex = (patternY * patternCanvas.width + patternX) * 4;
+      const patternX = x % patternSize.width;
+      const patternY = y % patternSize.height;
+      const patternIndex = (patternY * patternSize.width + patternX) * 4;
 
       outputPixels.data[outputIndex] = patternPixels.data[patternIndex];
       outputPixels.data[outputIndex + 1] = patternPixels.data[patternIndex + 1];
