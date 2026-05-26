@@ -28,6 +28,15 @@
     backdrop-filter: blur(16px) saturate(1.25);
     -webkit-backdrop-filter: blur(16px) saturate(1.25);
   }
+
+  @media (max-width: 840px) {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  @media (max-width: 560px) {
+    padding-inline: 0.85rem;
+  }
 }
 
 .brand {
@@ -44,18 +53,22 @@
   small {
     color: #60615d;
     font-size: 0.8rem;
-  }
-}
 
-.brandMark {
-  display: grid;
-  width: 2.5rem;
-  height: 2.5rem;
-  place-items: center;
-  border-radius: 8px;
-  color: #ffffff;
-  background: #285c61;
-  font-weight: 800;
+    @media (max-width: 560px) {
+      display: none;
+    }
+  }
+
+  &Mark {
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    place-items: center;
+    border-radius: 8px;
+    color: #ffffff;
+    background: #285c61;
+    font-weight: 800;
+  }
 }
 
 .primaryNav {
@@ -63,6 +76,10 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 0.5rem;
+
+  @media (max-width: 840px) {
+    justify-content: stretch;
+  }
 }
 
 .navLink {
@@ -88,42 +105,24 @@
   .scrolled &:global(.active) {
     background: rgba(220, 235, 230, 0.9);
   }
-}
 
-.main {
-  padding: clamp(1rem, 3vw, 2rem);
-}
-
-@media (max-width: 840px) {
-  .header {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-
-  .primaryNav {
-    justify-content: stretch;
-  }
-
-  .navLink {
+  @media (max-width: 840px) {
     flex: 1 1 9rem;
   }
-}
 
-@media (max-width: 560px) {
-  .header,
-  .main {
-    padding-inline: 0.85rem;
-  }
-
-  .brand small {
-    display: none;
-  }
-
-  .navLink {
+  @media (max-width: 560px) {
     justify-content: center;
 
     span {
       display: none;
     }
+  }
+}
+
+.main {
+  padding: clamp(1rem, 3vw, 2rem);
+
+  @media (max-width: 560px) {
+    padding-inline: 0.85rem;
   }
 }
