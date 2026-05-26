@@ -43,6 +43,11 @@ button:hover {
   border-color: #285c61;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -195,6 +200,51 @@ a {
   accent-color: #285c61;
 }
 
+.field-group .file-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  overflow: hidden;
+  border: 1px solid #c8c5bb;
+  border-radius: 8px;
+  padding: 0.65rem 0.8rem;
+  color: #202124;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.field-group .file-button:hover {
+  border-color: #285c61;
+}
+
+.field-group .file-button input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.source-file,
+.form-error {
+  margin: -0.35rem 0 0;
+  font-size: 0.8rem;
+}
+
+.source-file {
+  overflow: hidden;
+  color: #60615d;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.form-error {
+  color: #a4453d;
+  font-weight: 700;
+}
+
 .range-field {
   min-width: 0;
 }
@@ -212,6 +262,30 @@ a {
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   text-align: right;
+}
+
+.field-group .toggle-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.5rem;
+  border: 1px solid #d8d4ca;
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  background: #fbfaf7;
+  cursor: pointer;
+}
+
+.toggle-field input {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0;
+  accent-color: #285c61;
+}
+
+.toggle-field span {
+  flex: 1;
 }
 
 .primary-action {
@@ -252,6 +326,45 @@ a {
 
 .preview-area {
   min-width: 0;
+}
+
+.stereogram-preview {
+  position: relative;
+  display: grid;
+  min-height: clamp(24rem, 58vh, 42rem);
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid #143236;
+  border-radius: 8px;
+  background: #173f43;
+}
+
+.stereogram-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.preview-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  color: #f7f5ef;
+  background-image:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.preview-empty span {
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  background: rgba(20, 50, 54, 0.86);
+  font-weight: 700;
+  text-align: center;
 }
 
 .split-preview {
