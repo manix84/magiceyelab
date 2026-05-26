@@ -35,12 +35,13 @@
   }
 }
 
-.fileButton {
+label.fileButton {
   position: relative;
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.5rem;
+  width: 100%;
   min-height: 2.75rem;
   overflow: hidden;
   border: 1px solid #c8c5bb;
@@ -49,6 +50,10 @@
   color: #202124;
   background: #ffffff;
   cursor: pointer;
+
+  svg {
+    flex: 0 0 auto;
+  }
 
   &:hover,
   &:focus-within {
@@ -111,15 +116,16 @@
   }
 }
 
-.toggleField {
+label.toggleField {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.75rem;
-  min-height: 2.5rem;
+  width: 100%;
+  min-height: 2.75rem;
   border: 1px solid #d8d4ca;
   border-radius: 8px;
-  padding: 0.55rem 0.7rem;
+  padding: 0.65rem 0.8rem;
   background: #fbfaf7;
   cursor: pointer;
 
