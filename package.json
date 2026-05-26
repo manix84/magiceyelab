@@ -1,6 +1,6 @@
 {
   "name": "magiceyelab",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,10 +9,9 @@
     "build:dry-run": "npm run build",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
-    "typefix": "npm run typecheck",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "check": "npm run lint && npm run typefix && npm run build:dry-run",
+    "check": "npm run lint && npm run typecheck && npm run build:dry-run",
     "precommit:staged": "node scripts/pre-commit-staged-checks.mjs",
     "version:bump": "node scripts/smart-version-bump.mjs"
   },

@@ -14,8 +14,7 @@
       "problemMatcher": {
         "owner": "vite",
         "pattern": {
-          "regexp": "^\\s*(.*)$",
-          "message": 1
+          "regexp": "^(?!x)x$"
         },
         "background": {
           "activeOnStart": true,

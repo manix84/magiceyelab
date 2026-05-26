@@ -52,8 +52,8 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: TypeFix
-        run: npm run typefix
+      - name: Typecheck
+        run: npm run typecheck
 
       - name: Build MagicEyeLab
         run: npm run build:dry-run
