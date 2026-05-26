@@ -1,6 +1,12 @@
-import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import {
+  type ChangeEvent,
+  type DragEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import classNames from "classnames";
-import { mdiDownload, mdiImagePlus } from "@mdi/js";
+import { mdiDownload, mdiLayersPlus, mdiTextureBox } from "@mdi/js";
 import { FieldGroup } from "../../components/controls/FieldGroup";
 import { MdiIcon } from "../../components/icons/MdiIcon";
 import { PageHeader } from "../../components/layout/PageHeader";
@@ -12,6 +18,7 @@ import { renderStereogram } from "../../lib/stereogram/renderStereogram";
 import styles from "./GeneratorPage.module.scss";
 
 const maxPreviewWidth = 1200;
+type ImportSource = "depth" | "pattern";
 
 function createDefaultExportName(date = new Date()) {
   const parts = [
@@ -39,6 +46,20 @@ function getImageValidationError(file: File) {
     : "Choose a PNG, JPEG, or WEBP image.";
 }
 
+function hasDraggedFiles(dataTransfer: DataTransfer) {
+  return Array.from(dataTransfer.types).includes("Files");
+}
+
+function hasSupportedDraggedFile(dataTransfer: DataTransfer) {
+  const items = Array.from(dataTransfer.items).filter(
+    (item) => item.kind === "file",
+  );
+
+  return items.some((item) =>
+    (supportedImageTypes as readonly string[]).includes(item.type),
+  );
+}
+
 function getPreviewSize(image: HTMLImageElement) {
   const width = Math.min(maxPreviewWidth, image.naturalWidth);
   const height = Math.max(1, Math.round(width / (image.naturalWidth / image.naturalHeight)));
@@ -59,34 +80,67 @@ export function GeneratorPage() {
   const [patternImage, setPatternImage] = useState<HTMLImageElement | null>(null);
   const [patternFileName, setPatternFileName] = useState("");
   const [patternImportError, setPatternImportError] = useState("");
+  const [dragSource, setDragSource] = useState<ImportSource | null>(null);
+  const [rejectedDragSource, setRejectedDragSource] = useState<ImportSource | null>(null);
+  const [depthThumbnailUrl, setDepthThumbnailUrl] = useState("");
+  const [patternThumbnailUrl, setPatternThumbnailUrl] = useState("");
+  const depthThumbnailUrlRef = useRef("");
+  const patternThumbnailUrlRef = useRef("");
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const imageAccept = supportedImageTypes.join(",");
+
+  useEffect(() => {
+    return () => {
+      if (depthThumbnailUrlRef.current) {
+        URL.revokeObjectURL(depthThumbnailUrlRef.current);
+      }
+
+      if (patternThumbnailUrlRef.current) {
+        URL.revokeObjectURL(patternThumbnailUrlRef.current);
+      }
+    };
+  }, []);
 
   function clearDepthImport() {
     setDepthImage(null);
     setDepthFileName("");
     setDepthInferenceMessage("");
+    replaceDepthThumbnail(null);
   }
 
   function clearPatternImport() {
     setPatternImage(null);
     setPatternFileName("");
+    replacePatternThumbnail(null);
   }
 
-  async function handlePatternImport(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-
-    if (!file) {
-      return;
+  function replaceDepthThumbnail(file: File | null) {
+    if (depthThumbnailUrlRef.current) {
+      URL.revokeObjectURL(depthThumbnailUrlRef.current);
     }
 
+    const nextUrl = file ? URL.createObjectURL(file) : "";
+    depthThumbnailUrlRef.current = nextUrl;
+    setDepthThumbnailUrl(nextUrl);
+  }
+
+  function replacePatternThumbnail(file: File | null) {
+    if (patternThumbnailUrlRef.current) {
+      URL.revokeObjectURL(patternThumbnailUrlRef.current);
+    }
+
+    const nextUrl = file ? URL.createObjectURL(file) : "";
+    patternThumbnailUrlRef.current = nextUrl;
+    setPatternThumbnailUrl(nextUrl);
+  }
+
+  async function importPatternFile(file: File) {
     const validationError = getImageValidationError(file);
 
     if (validationError) {
       clearPatternImport();
       setPatternImportError(validationError);
-      event.target.value = "";
       return;
     }
 
@@ -94,30 +148,22 @@ export function GeneratorPage() {
       const image = await loadImageFile(file);
       setPatternImage(image);
       setPatternFileName(file.name);
+      replacePatternThumbnail(file);
       setPatternImportError("");
     } catch (error) {
       clearPatternImport();
       setPatternImportError(
         error instanceof Error ? error.message : "Could not load image.",
       );
-    } finally {
-      event.target.value = "";
     }
   }
 
-  async function handleDepthImport(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-
-    if (!file) {
-      return;
-    }
-
+  async function importDepthFile(file: File) {
     const validationError = getImageValidationError(file);
 
     if (validationError) {
       clearDepthImport();
       setDepthImportError(validationError);
-      event.target.value = "";
       return;
     }
 
@@ -127,14 +173,85 @@ export function GeneratorPage() {
       setDepthImage(inference.image);
       setDepthFileName(file.name);
       setDepthInferenceMessage(inference.message);
+      replaceDepthThumbnail(file);
       setDepthImportError("");
     } catch (error) {
       clearDepthImport();
       setDepthImportError(
         error instanceof Error ? error.message : "Could not load image.",
       );
-    } finally {
-      event.target.value = "";
+    }
+  }
+
+  async function handlePatternImport(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      await importPatternFile(file);
+    }
+
+    event.target.value = "";
+  }
+
+  async function handleDepthImport(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      await importDepthFile(file);
+    }
+
+    event.target.value = "";
+  }
+
+  function handleSourceDragOver(
+    event: DragEvent<HTMLLabelElement>,
+    source: ImportSource,
+  ) {
+    if (!hasDraggedFiles(event.dataTransfer)) {
+      return;
+    }
+
+    event.preventDefault();
+    const hasSupportedFile = hasSupportedDraggedFile(event.dataTransfer);
+    event.dataTransfer.dropEffect = hasSupportedFile ? "copy" : "none";
+    setDragSource(source);
+    setRejectedDragSource(hasSupportedFile ? null : source);
+  }
+
+  function handleSourceDragLeave(event: DragEvent<HTMLLabelElement>) {
+    if (
+      event.relatedTarget instanceof Node &&
+      event.currentTarget.contains(event.relatedTarget)
+    ) {
+      return;
+    }
+
+    setDragSource(null);
+    setRejectedDragSource(null);
+  }
+
+  async function handleSourceDrop(
+    event: DragEvent<HTMLLabelElement>,
+    source: ImportSource,
+  ) {
+    if (!hasDraggedFiles(event.dataTransfer)) {
+      return;
+    }
+
+    event.preventDefault();
+    setDragSource(null);
+    setRejectedDragSource(null);
+
+    const file = event.dataTransfer.files[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (source === "depth") {
+      await importDepthFile(file);
+    } else {
+      await importPatternFile(file);
     }
   }
 
@@ -215,38 +332,84 @@ export function GeneratorPage() {
       <div className={styles.workspaceGrid}>
         <aside className={styles.toolPanel} aria-label="Generator controls">
           <FieldGroup title="Sources">
-            <label className={styles.fileButton}>
-              <MdiIcon path={mdiImagePlus} />
-              <span>Import depth map</span>
-              <input
-                type="file"
-                accept={imageAccept}
-                onChange={handleDepthImport}
-              />
-            </label>
-            {depthFileName ? <p className={styles.sourceFile}>{depthFileName}</p> : null}
-            {depthInferenceMessage ? (
-              <p className={styles.sourceNote}>{depthInferenceMessage}</p>
-            ) : null}
-            {depthImportError ? (
-              <p className={styles.formError}>{depthImportError}</p>
-            ) : null}
+            <div className={styles.sourceDropStack}>
+              <div className={styles.sourceDropItem}>
+                <label
+                  className={classNames(styles.dropZone, {
+                    [styles.dragActive]: dragSource === "depth",
+                    [styles.dragRejected]: rejectedDragSource === "depth",
+                  })}
+                  onDragOver={(event) => handleSourceDragOver(event, "depth")}
+                  onDragLeave={handleSourceDragLeave}
+                  onDrop={(event) => void handleSourceDrop(event, "depth")}
+                >
+                  {depthThumbnailUrl ? (
+                    <img
+                      className={styles.dropThumbnail}
+                      src={depthThumbnailUrl}
+                      alt=""
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <MdiIcon path={mdiLayersPlus} />
+                  )}
+                  <span>
+                    <strong>Import depth map</strong>
+                    <small>Drop a depth image here, or choose a file</small>
+                  </span>
+                  <input
+                    type="file"
+                    accept={imageAccept}
+                    onChange={handleDepthImport}
+                  />
+                </label>
+                {depthFileName ? <p className={styles.sourceFile}>{depthFileName}</p> : null}
+                {depthInferenceMessage ? (
+                  <p className={styles.sourceNote}>{depthInferenceMessage}</p>
+                ) : null}
+                {depthImportError ? (
+                  <p className={styles.formError}>{depthImportError}</p>
+                ) : null}
+              </div>
 
-            <label className={styles.fileButton}>
-              <MdiIcon path={mdiImagePlus} />
-              <span>Import pattern</span>
-              <input
-                type="file"
-                accept={imageAccept}
-                onChange={handlePatternImport}
-              />
-            </label>
-            {patternFileName ? (
-              <p className={styles.sourceFile}>{patternFileName}</p>
-            ) : null}
-            {patternImportError ? (
-              <p className={styles.formError}>{patternImportError}</p>
-            ) : null}
+              <div className={styles.sourceDropItem}>
+                <label
+                  className={classNames(styles.dropZone, {
+                    [styles.dragActive]: dragSource === "pattern",
+                    [styles.dragRejected]: rejectedDragSource === "pattern",
+                  })}
+                  onDragOver={(event) => handleSourceDragOver(event, "pattern")}
+                  onDragLeave={handleSourceDragLeave}
+                  onDrop={(event) => void handleSourceDrop(event, "pattern")}
+                >
+                  {patternThumbnailUrl ? (
+                    <img
+                      className={styles.dropThumbnail}
+                      src={patternThumbnailUrl}
+                      alt=""
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <MdiIcon path={mdiTextureBox} />
+                  )}
+                  <span>
+                    <strong>Import pattern</strong>
+                    <small>Drop a pattern tile here, or choose a file</small>
+                  </span>
+                  <input
+                    type="file"
+                    accept={imageAccept}
+                    onChange={handlePatternImport}
+                  />
+                </label>
+                {patternFileName ? (
+                  <p className={styles.sourceFile}>{patternFileName}</p>
+                ) : null}
+                {patternImportError ? (
+                  <p className={styles.formError}>{patternImportError}</p>
+                ) : null}
+              </div>
+            </div>
           </FieldGroup>
 
           <FieldGroup title="Render">

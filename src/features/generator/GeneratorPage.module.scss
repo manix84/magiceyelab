@@ -79,6 +79,112 @@ label.fileButton {
   }
 }
 
+.sourceDropStack {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.sourceDropItem {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+label.dropZone {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 6rem;
+  overflow: hidden;
+  border: 1px dashed #b8b2a6;
+  border-radius: 8px;
+  padding: 0.85rem;
+  color: #202124;
+  background:
+    linear-gradient(135deg, rgba(40, 92, 97, 0.07), transparent 42%),
+    #ffffff;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease;
+
+  svg {
+    flex: 0 0 auto;
+    color: #285c61;
+  }
+
+  .dropThumbnail {
+    width: 3.5rem;
+    height: 3.5rem;
+    border: 1px solid rgba(40, 92, 97, 0.18);
+    border-radius: 6px;
+    object-fit: cover;
+    background: #f7f5ef;
+    box-shadow: 0 1px 3px rgba(23, 25, 26, 0.12);
+  }
+
+  span {
+    display: grid;
+    min-width: 0;
+    gap: 0.15rem;
+  }
+
+  strong,
+  small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  small {
+    color: #60615d;
+    line-height: 1.3;
+  }
+
+  &:hover,
+  &:focus-within {
+    border-color: #285c61;
+    box-shadow: 0 0 0 2px rgba(40, 92, 97, 0.12);
+  }
+
+  &:focus-within {
+    outline: 2px solid rgba(40, 92, 97, 0.18);
+    outline-offset: 2px;
+  }
+
+  input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+}
+
+.dragActive {
+  border-color: #285c61;
+  background:
+    linear-gradient(135deg, rgba(40, 92, 97, 0.14), transparent 48%),
+    #edf7f3;
+  box-shadow: 0 0 0 3px rgba(40, 92, 97, 0.14);
+}
+
+.dragRejected {
+  border-color: #a4453d;
+  color: #6d2721;
+  background:
+    linear-gradient(135deg, rgba(164, 69, 61, 0.12), transparent 48%),
+    #fff8f6;
+  box-shadow: 0 0 0 3px rgba(164, 69, 61, 0.12);
+
+  svg,
+  small {
+    color: #a4453d;
+  }
+}
+
 .sourceFile,
 .sourceNote,
 .formError {
