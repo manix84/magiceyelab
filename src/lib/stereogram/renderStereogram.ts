@@ -9,6 +9,9 @@ type RenderStereogramOptions = {
 };
 
 const maxPatternSampleSize = 512;
+const depthOverlayAlpha = 0.64;
+const contourBandAlpha = 0.36;
+const contourBandWidth = 0.055;
 
 function getClampedSize(width: number, height: number, maxSize: number) {
   const scale = Math.min(1, maxSize / Math.max(width, height));
@@ -125,11 +128,16 @@ export function renderStereogram({
         depthPixels.data[index + 1] * 0.587 +
         depthPixels.data[index + 2] * 0.114;
       const depth = settings.invertDepth ? 255 - luminance : luminance;
-      const overlayAlpha = 0.42;
       const highlight = depth / 255;
-      const overlayRed = 30 + 225 * highlight;
-      const overlayGreen = 220 - 120 * highlight;
-      const overlayBlue = 210 - 185 * highlight;
+      const warmRamp = Math.max(0, (highlight - 0.48) / 0.52);
+      const coolRamp = Math.max(0, (0.52 - highlight) / 0.52);
+      const contourDistance = Math.abs((highlight * 10) % 1 - 0.5);
+      const contourAlpha =
+        contourDistance < contourBandWidth ? contourBandAlpha : 0;
+      const overlayAlpha = Math.min(0.82, depthOverlayAlpha + contourAlpha);
+      const overlayRed = 28 + 227 * warmRamp;
+      const overlayGreen = 238 - 142 * warmRamp - 40 * coolRamp;
+      const overlayBlue = 255 - 224 * warmRamp - 78 * coolRamp;
 
       outputPixels.data[index] =
         outputPixels.data[index] * (1 - overlayAlpha) + overlayRed * overlayAlpha;
