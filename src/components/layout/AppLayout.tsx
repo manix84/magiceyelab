@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import classNames from "classnames";
 import { mdiImageMultiple, mdiLayersTriple, mdiViewGrid } from "@mdi/js";
 import { NavLink, Outlet } from "react-router-dom";
+import logoUrl from "../../assets/magiceyelab-logo.svg";
 import { MdiIcon } from "../icons/MdiIcon";
 import styles from "./AppLayout.module.scss";
 
@@ -33,9 +34,7 @@ export function AppLayout() {
         })}
       >
         <a className={styles.brand} href="/" aria-label="MagicEyeLab home">
-          <span className={styles.brandMark} aria-hidden="true">
-            M
-          </span>
+          <img className={styles.brandMark} src={logoUrl} alt="" aria-hidden="true" />
           <span>
             <strong>MagicEyeLab</strong>
             <small>Local stereogram studio</small>

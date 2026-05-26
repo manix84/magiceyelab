@@ -60,14 +60,10 @@
   }
 
   &Mark {
-    display: grid;
     width: 2.5rem;
     height: 2.5rem;
-    place-items: center;
     border-radius: 8px;
-    color: #ffffff;
-    background: #285c61;
-    font-weight: 800;
+    box-shadow: 0 1px 4px rgba(23, 25, 26, 0.14);
   }
 }
 

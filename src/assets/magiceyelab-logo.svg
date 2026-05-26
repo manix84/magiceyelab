@@ -1,0 +1,15 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">MagicEyeLab logo</title>
+  <desc id="desc">An eye-shaped stereogram mark with offset pattern bands and a hidden diamond depth shape.</desc>
+  <rect width="64" height="64" rx="14" fill="#285C61"/>
+  <path d="M8 32C14.4 20.7 22.4 15 32 15C41.6 15 49.6 20.7 56 32C49.6 43.3 41.6 49 32 49C22.4 49 14.4 43.3 8 32Z" fill="#F7F5EF"/>
+  <path d="M12.5 32C18.1 23.1 24.6 18.7 32 18.7C39.4 18.7 45.9 23.1 51.5 32C45.9 40.9 39.4 45.3 32 45.3C24.6 45.3 18.1 40.9 12.5 32Z" fill="#DCEBE6"/>
+  <path d="M16 25.2H48C49.2 26.4 50.4 27.9 51.5 29.6H12.5C13.6 27.9 14.8 26.4 16 25.2Z" fill="#2A9D8F"/>
+  <path d="M12.5 34.4H51.5C50.4 36.1 49.2 37.6 48 38.8H16C14.8 37.6 13.6 36.1 12.5 34.4Z" fill="#E63946"/>
+  <circle cx="32" cy="32" r="12.5" fill="#173F43"/>
+  <circle cx="32" cy="32" r="8.2" fill="#102F32"/>
+  <path d="M32 21.5L38.7 32L32 42.5L25.3 32L32 21.5Z" fill="#F4A261"/>
+  <path d="M32 25.8L36 32L32 38.2L28 32L32 25.8Z" fill="#F7F5EF"/>
+  <path d="M20 18.8L28.2 28.1" stroke="#102F32" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M44 45.2L35.8 35.9" stroke="#102F32" stroke-width="2.2" stroke-linecap="round"/>
+</svg>
