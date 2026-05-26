@@ -292,7 +292,8 @@ export function GeneratorPage() {
                 checked={showDepthOverlay}
                 onChange={(event) => setShowDepthOverlay(event.target.checked)}
               />
-              <span>Show depth overlay</span>
+              <span className={styles.toggleSwitch} aria-hidden="true" />
+              <span className={styles.toggleLabel}>Show depth overlay</span>
             </label>
           </FieldGroup>
 
