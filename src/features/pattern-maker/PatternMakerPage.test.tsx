@@ -11,6 +11,7 @@ function createCanvasContextMock() {
     beginPath: vi.fn(),
     arc: vi.fn(),
     clearRect: vi.fn(),
+    closePath: vi.fn(),
     createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
     createPattern: vi.fn(() => ({})),
     drawImage: vi.fn(),
@@ -139,7 +140,7 @@ describe("PatternMakerPage", () => {
     );
     expect(screen.getByRole("slider", { name: "Pencil size" })).toHaveValue("36");
     expect(screen.queryByRole("slider", { name: "Brush opacity" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Square" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Diamond" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Fill" }));
     await user.click(screen.getByRole("button", { name: "Global" }));
@@ -317,6 +318,12 @@ describe("PatternMakerPage", () => {
 
     fireEvent.keyDown(window, { key: "b" });
     expect(screen.getByRole("button", { name: "Brush" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
+    fireEvent.keyDown(window, { key: "s" });
+    expect(screen.getByRole("button", { name: "Shape" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );

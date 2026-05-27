@@ -47,7 +47,13 @@ const defaultBrushSpacing = 8;
 const maxHistoryStates = 24;
 const acceptedPatternTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 type PatternTool = "pencil" | "brush" | "eraser" | "eyedropper" | "fill" | "shape";
-type BrushShape = "circle" | "square";
+type BrushShape =
+  | "circle"
+  | "diamond"
+  | "line-diagonal"
+  | "line-horizontal"
+  | "line-vertical"
+  | "square";
 type FillMode = "contiguous" | "global";
 type ShapeKind = "line" | "rectangle" | "ellipse";
 type ShapeMode = "stroke" | "fill" | "stroke-and-fill";
@@ -271,7 +277,16 @@ function readStoredPatternMakerState(): StoredPatternMakerState {
           .filter((color): color is string => Boolean(color))
           .slice(0, 5)
         : [],
-      brushShape: parsedValue.brushShape === "square" ? "square" as const : "circle" as const,
+      brushShape: [
+        "circle",
+        "diamond",
+        "line-diagonal",
+        "line-horizontal",
+        "line-vertical",
+        "square",
+      ].includes(parsedValue.brushShape ?? "")
+        ? parsedValue.brushShape as BrushShape
+        : "circle" as const,
       brushSize: clampNumber(
         parsedValue.brushSize,
         1,
@@ -726,10 +741,6 @@ export function PatternMakerPage() {
   }
 
   function getActiveBrushShape() {
-    if (selectedTool === "pencil") {
-      return "square";
-    }
-
     return brushShape;
   }
 
@@ -745,6 +756,69 @@ export function PatternMakerPage() {
     };
   }
 
+  function drawStampPath(
+    context: CanvasRenderingContext2D,
+    shape: BrushShape,
+    x: number,
+    y: number,
+    size: number,
+  ) {
+    const halfSize = size / 2;
+    const lineThickness = Math.max(1, size * 0.28);
+
+    context.beginPath();
+
+    if (shape === "square") {
+      context.rect(
+        Math.round(x - halfSize),
+        Math.round(y - halfSize),
+        Math.round(size),
+        Math.round(size),
+      );
+      return;
+    }
+
+    if (shape === "diamond") {
+      context.moveTo(Math.round(x), Math.round(y - halfSize));
+      context.lineTo(Math.round(x + halfSize), Math.round(y));
+      context.lineTo(Math.round(x), Math.round(y + halfSize));
+      context.lineTo(Math.round(x - halfSize), Math.round(y));
+      context.closePath();
+      return;
+    }
+
+    if (shape === "line-horizontal") {
+      context.rect(
+        Math.round(x - halfSize),
+        Math.round(y - lineThickness / 2),
+        Math.round(size),
+        Math.round(lineThickness),
+      );
+      return;
+    }
+
+    if (shape === "line-vertical") {
+      context.rect(
+        Math.round(x - lineThickness / 2),
+        Math.round(y - halfSize),
+        Math.round(lineThickness),
+        Math.round(size),
+      );
+      return;
+    }
+
+    if (shape === "line-diagonal") {
+      context.moveTo(Math.round(x - halfSize), Math.round(y + halfSize));
+      context.lineTo(Math.round(x + halfSize), Math.round(y - halfSize));
+      context.lineTo(Math.round(x + halfSize + lineThickness), Math.round(y - halfSize + lineThickness));
+      context.lineTo(Math.round(x - halfSize + lineThickness), Math.round(y + halfSize + lineThickness));
+      context.closePath();
+      return;
+    }
+
+    context.arc(x, y, halfSize, 0, Math.PI * 2);
+  }
+
   function paintStamp(context: CanvasRenderingContext2D, point: StrokePoint) {
     const stamp = getStampSettings(point);
 
@@ -754,13 +828,17 @@ export function PatternMakerPage() {
       context.fillStyle = stamp.color;
 
       const size = Math.max(1, Math.round(stamp.size));
-      const halfSize = size / 2;
-      const x = Math.floor(point.x - halfSize);
-      const y = Math.floor(point.y - halfSize);
 
       for (const offsetX of [-tileSize, 0, tileSize]) {
         for (const offsetY of [-tileSize, 0, tileSize]) {
-          context.fillRect(x + offsetX, y + offsetY, size, size);
+          drawStampPath(
+            context,
+            stamp.shape,
+            Math.floor(point.x) + offsetX,
+            Math.floor(point.y) + offsetY,
+            size,
+          );
+          context.fill();
         }
       }
 
@@ -775,15 +853,10 @@ export function PatternMakerPage() {
           const x = point.x + offsetX;
           const y = point.y + offsetY;
 
-          if (stamp.shape === "square") {
-            const halfSize = stamp.size / 2;
+          if (stamp.shape !== "circle") {
             context.fillStyle = stamp.color;
-            context.fillRect(
-              Math.round(x - halfSize),
-              Math.round(y - halfSize),
-              stamp.size,
-              stamp.size,
-            );
+            drawStampPath(context, stamp.shape, x, y, stamp.size);
+            context.fill();
             continue;
           }
 
@@ -1496,7 +1569,7 @@ export function PatternMakerPage() {
   const activeBrushShape = getActiveBrushShape();
   const usesBrushStamp = ["brush", "eraser", "pencil"].includes(selectedTool);
   const usesSoftBrushControls = selectedTool === "brush" || selectedTool === "eraser";
-  const usesBrushShapeControl = selectedTool === "brush" || selectedTool === "eraser";
+  const usesBrushShapeControl = usesBrushStamp;
   const usesFillControls = selectedTool === "fill";
   const usesShapeControls = selectedTool === "shape";
   const usesPaletteControls = selectedTool !== "eraser" &&
@@ -1626,6 +1699,10 @@ export function PatternMakerPage() {
                   className={classNames(styles.implementDemoPad, {
                     [styles.strokeImplementDemo]: usesBrushStamp,
                     [styles.squareStrokeDemo]: usesBrushStamp && activeBrushShape === "square",
+                    [styles.diamondStrokeDemo]: usesBrushStamp && activeBrushShape === "diamond",
+                    [styles.lineDiagonalStrokeDemo]: usesBrushStamp && activeBrushShape === "line-diagonal",
+                    [styles.lineHorizontalStrokeDemo]: usesBrushStamp && activeBrushShape === "line-horizontal",
+                    [styles.lineVerticalStrokeDemo]: usesBrushStamp && activeBrushShape === "line-vertical",
                     [styles.eraserStrokeDemo]: selectedTool === "eraser",
                     [styles.fillImplementDemo]: selectedTool === "fill",
                     [styles.pickerImplementDemo]: selectedTool === "eyedropper",
@@ -1729,7 +1806,7 @@ export function PatternMakerPage() {
                   </>
                 ) : null}
                 {usesBrushShapeControl ? (
-                  <div className={styles.shapeControl} aria-label={`${implementControlLabel} shape`}>
+                  <div className={styles.shapeControl} aria-label={`${implementControlLabel} tip shape`}>
                     <button
                       type="button"
                       aria-pressed={brushShape === "circle"}
@@ -1745,6 +1822,38 @@ export function PatternMakerPage() {
                     >
                       <MdiIcon path={mdiShapeSquarePlus} />
                       Square
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={brushShape === "diamond"}
+                      onClick={() => setBrushShape("diamond")}
+                    >
+                      <MdiIcon path={mdiShapeSquarePlus} />
+                      Diamond
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={brushShape === "line-horizontal"}
+                      onClick={() => setBrushShape("line-horizontal")}
+                    >
+                      <MdiIcon path={mdiVectorLine} />
+                      H Line
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={brushShape === "line-vertical"}
+                      onClick={() => setBrushShape("line-vertical")}
+                    >
+                      <MdiIcon path={mdiVectorLine} />
+                      V Line
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={brushShape === "line-diagonal"}
+                      onClick={() => setBrushShape("line-diagonal")}
+                    >
+                      <MdiIcon path={mdiVectorLine} />
+                      Diagonal
                     </button>
                   </div>
                 ) : null}
@@ -2122,6 +2231,10 @@ export function PatternMakerPage() {
                 <div
                   className={classNames(styles.brushCursor, {
                     [styles.squareBrushCursor]: activeBrushShape === "square",
+                    [styles.diamondBrushCursor]: activeBrushShape === "diamond",
+                    [styles.lineDiagonalBrushCursor]: activeBrushShape === "line-diagonal",
+                    [styles.lineHorizontalBrushCursor]: activeBrushShape === "line-horizontal",
+                    [styles.lineVerticalBrushCursor]: activeBrushShape === "line-vertical",
                     [styles.eraserBrushCursor]: selectedTool === "eraser",
                     [styles.iconBrushCursor]: cursorIconPath,
                   })}

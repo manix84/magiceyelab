@@ -184,6 +184,36 @@
   }
 }
 
+.diamondStrokeDemo {
+  .demoStamp {
+    border-radius: 4px;
+    background: var(--implement-demo-color);
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+}
+
+.lineHorizontalStrokeDemo,
+.lineVerticalStrokeDemo,
+.lineDiagonalStrokeDemo {
+  .demoStamp {
+    height: clamp(0.25rem, calc(var(--implement-demo-size) * 0.28), 0.8rem);
+    border-radius: 999px;
+    background: var(--implement-demo-color);
+  }
+}
+
+.lineVerticalStrokeDemo {
+  .demoStamp {
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+}
+
+.lineDiagonalStrokeDemo {
+  .demoStamp {
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+}
+
 .eraserStrokeDemo {
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--color-border) 38%, transparent) 1px, transparent 1px),
@@ -642,6 +672,38 @@ label.toggleField {
 
 .squareBrushCursor {
   border-radius: 3px;
+}
+
+.diamondBrushCursor {
+  border-radius: 3px;
+  transform: translate(-50%, -50%) rotate(45deg);
+
+  .brushCursorLabel {
+    transform: translateX(-50%) rotate(-45deg);
+  }
+}
+
+.lineHorizontalBrushCursor,
+.lineVerticalBrushCursor,
+.lineDiagonalBrushCursor {
+  height: max(0.3rem, calc(var(--brush-cursor-size) * 0.28));
+  border-radius: 999px;
+}
+
+.lineVerticalBrushCursor {
+  transform: translate(-50%, -50%) rotate(90deg);
+
+  .brushCursorLabel {
+    transform: translateX(-50%) rotate(-90deg);
+  }
+}
+
+.lineDiagonalBrushCursor {
+  transform: translate(-50%, -50%) rotate(-45deg);
+
+  .brushCursorLabel {
+    transform: translateX(-50%) rotate(45deg);
+  }
 }
 
 .eraserBrushCursor {

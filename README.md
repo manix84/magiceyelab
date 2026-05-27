@@ -63,7 +63,8 @@ Instead of relying on imported images, you can draw your own seamless repeating 
 - ▭ Shape tool for line, rectangle, and ellipse drawing with paint/erase modes
 - 💧 Eyedropper colour picking from the tile
 - 🖌️ Adjustable brush size
-- 🌫️ Brush opacity, flow, hardness, spacing, and circle/square shape controls
+- ◆ Shared Pencil, Brush, and Eraser tip shapes
+- 🌫️ Brush opacity, flow, hardness, spacing, and shaped tip controls
 - ⭕ Colour-aware brush, fill, and eyedropper previews on the canvas
 - ♾️ Square painting tile with opposite-edge seam previews
 - 🔁 Wraparound painting across tile edges and corners

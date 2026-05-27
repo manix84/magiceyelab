@@ -7,6 +7,7 @@
 - Updated Eraser mode to remove pixels to transparency with brush-style opacity, flow, hardness, spacing, and wraparound stamping.
 - Added Fill mode with contiguous/global fill options and tolerance control.
 - Added a Shape tool for line, rectangle, and ellipse drawing with stroke/fill and paint/erase modes.
+- Added shared Pencil, Brush, and Eraser tip shapes: circle, square, diamond, horizontal line, vertical line, and diagonal line.
 - Added Eyedropper mode for picking colours from the tile.
 - Added adjustable brush size.
 - Added stamp-based brush painting with opacity, flow, hardness, spacing, and circle/square shape controls.
