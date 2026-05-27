@@ -8,6 +8,7 @@ import {
 import classNames from "classnames";
 import {
   mdiDownload,
+  mdiMovieOpenPlayOutline,
   mdiLayersPlus,
   mdiLayersTripleOutline,
   mdiTextureBox,
@@ -40,6 +41,8 @@ type StoredGeneratorState = {
   version: 1;
   exportName: string;
   depthStrength: number;
+  animationEnabled: boolean;
+  animationSpeed: number;
   repeatWidth: number;
   showDepthOverlay: boolean;
   depthFileName: string;
@@ -53,6 +56,8 @@ const defaultStoredGeneratorState: StoredGeneratorState = {
   version: 1,
   exportName: "",
   depthStrength: 45,
+  animationEnabled: false,
+  animationSpeed: 32,
   repeatWidth: 120,
   showDepthOverlay: false,
   depthFileName: "",
@@ -113,6 +118,13 @@ function readStoredGeneratorState(): StoredGeneratorState {
         48,
         240,
         defaultStoredGeneratorState.repeatWidth,
+      ),
+      animationEnabled: parsedValue.animationEnabled === true,
+      animationSpeed: clampNumber(
+        parsedValue.animationSpeed,
+        4,
+        120,
+        defaultStoredGeneratorState.animationSpeed,
       ),
       showDepthOverlay: parsedValue.showDepthOverlay === true,
       depthFileName:
@@ -249,6 +261,12 @@ export function GeneratorPage() {
     storedGeneratorState.depthStrength,
   );
   const [repeatWidth, setRepeatWidth] = useState(storedGeneratorState.repeatWidth);
+  const [animationEnabled, setAnimationEnabled] = useState(
+    storedGeneratorState.animationEnabled,
+  );
+  const [animationSpeed, setAnimationSpeed] = useState(
+    storedGeneratorState.animationSpeed,
+  );
   const [showDepthOverlay, setShowDepthOverlay] = useState(
     storedGeneratorState.showDepthOverlay,
   );
@@ -391,6 +409,8 @@ export function GeneratorPage() {
       exportName,
       depthStrength,
       repeatWidth,
+      animationEnabled,
+      animationSpeed,
       showDepthOverlay,
       depthFileName: depthImageDataUrl ? depthFileName : "",
       depthInferenceMessage: depthImageDataUrl ? depthInferenceMessage : "",
@@ -405,6 +425,8 @@ export function GeneratorPage() {
     depthImageDataUrl,
     depthInferenceMessage,
     depthStrength,
+    animationEnabled,
+    animationSpeed,
     exportName,
     patternFileName,
     patternImageDataUrl,
@@ -616,37 +638,67 @@ export function GeneratorPage() {
       return;
     }
 
-    const timeoutId = window.setTimeout(() => {
-      const frameId = window.requestAnimationFrame(() => {
-        const { width, height } = getPreviewSize(depthImage, previewBounds);
+    let animationFrameId = 0;
+    let animationStartedAt = 0;
+    let previousAnimatedFrameAt = 0;
+    const animatedFrameInterval = 1000 / 12;
 
-        renderStereogram({
-          canvas,
-          depthImage,
-          patternImage,
-          settings: {
-            ...defaultStereogramSettings,
-            width,
-            height,
-            depthStrength,
-            repeatWidth,
-          },
-          showDepthOverlay,
-        });
+    function renderFrame(patternOffset = 0) {
+      if (!canvas || !depthImage || !patternImage) {
+        return;
+      }
+
+      const { width, height } = getPreviewSize(depthImage, previewBounds);
+
+      renderStereogram({
+        canvas,
+        depthImage,
+        patternImage,
+        patternOffsetX: patternOffset,
+        patternOffsetY: patternOffset * 0.35,
+        settings: {
+          ...defaultStereogramSettings,
+          width,
+          height,
+          depthStrength,
+          repeatWidth,
+        },
+        showDepthOverlay,
       });
+    }
 
-      canvas.dataset.renderFrame = String(frameId);
+    function renderAnimatedFrame(timestamp: number) {
+      if (!animationStartedAt) {
+        animationStartedAt = timestamp;
+      }
+
+      if (timestamp - previousAnimatedFrameAt >= animatedFrameInterval) {
+        const elapsedSeconds = (timestamp - animationStartedAt) / 1000;
+        renderFrame(elapsedSeconds * animationSpeed);
+        previousAnimatedFrameAt = timestamp;
+      }
+
+      animationFrameId = window.requestAnimationFrame(renderAnimatedFrame);
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      animationFrameId = window.requestAnimationFrame((timestamp) => {
+        if (animationEnabled) {
+          renderAnimatedFrame(timestamp);
+          return;
+        }
+
+        renderFrame();
+      });
     }, 80);
 
     return () => {
       window.clearTimeout(timeoutId);
-
-      if (canvas.dataset.renderFrame) {
-        window.cancelAnimationFrame(Number(canvas.dataset.renderFrame));
-        delete canvas.dataset.renderFrame;
-      }
+      window.cancelAnimationFrame(animationFrameId);
     };
   }, [
+    animationEnabled,
+    animationSpeed,
     depthImage,
     depthStrength,
     patternImage,
@@ -777,6 +829,22 @@ export function GeneratorPage() {
               valueLabel={`${repeatWidth}px`}
               onChange={setRepeatWidth}
             />
+            <ToggleField
+              checked={animationEnabled}
+              iconPath={mdiMovieOpenPlayOutline}
+              label="Animate preview"
+              onChange={setAnimationEnabled}
+            />
+            {animationEnabled ? (
+              <RangeField
+                label="Animation speed"
+                min={4}
+                max={120}
+                value={animationSpeed}
+                valueLabel={`${animationSpeed}px/s`}
+                onChange={setAnimationSpeed}
+              />
+            ) : null}
             <ToggleField
               checked={showDepthOverlay}
               iconPath={mdiLayersTripleOutline}
