@@ -32,6 +32,7 @@ import {
 } from "@mdi/js";
 import { useNavigate } from "react-router-dom";
 import { FieldGroup } from "../../components/controls/FieldGroup";
+import { ToggleField } from "../../components/controls/ToggleField";
 import { MdiIcon } from "../../components/icons/MdiIcon";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { storageKeys } from "../../lib/storage/keys";
@@ -2263,30 +2264,18 @@ export function PatternMakerPage() {
 
             <div className={styles.panelBlock}>
               <span className={styles.panelSubheading}>View</span>
-              <label className={styles.toggleField}>
-                <input
-                  type="checkbox"
-                  checked={showGrid}
-                  onChange={(event) => setShowGrid(event.target.checked)}
-                />
-                <span className={styles.toggleSwitch} aria-hidden="true" />
-                <span className={styles.toggleLabel}>
-                  <MdiIcon path={mdiGrid} />
-                  Show grid
-                </span>
-              </label>
-              <label className={styles.toggleField}>
-                <input
-                  type="checkbox"
-                  checked={showTileBoundary}
-                  onChange={(event) => setShowTileBoundary(event.target.checked)}
-                />
-                <span className={styles.toggleSwitch} aria-hidden="true" />
-                <span className={styles.toggleLabel}>
-                  <MdiIcon path={mdiVectorSquare} />
-                  Show boundary
-                </span>
-              </label>
+              <ToggleField
+                checked={showGrid}
+                iconPath={mdiGrid}
+                label="Show grid"
+                onChange={setShowGrid}
+              />
+              <ToggleField
+                checked={showTileBoundary}
+                iconPath={mdiVectorSquare}
+                label="Show boundary"
+                onChange={setShowTileBoundary}
+              />
             </div>
           </FieldGroup>
 

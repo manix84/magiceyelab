@@ -6,8 +6,14 @@ import {
   useState,
 } from "react";
 import classNames from "classnames";
-import { mdiDownload, mdiLayersPlus, mdiTextureBox } from "@mdi/js";
+import {
+  mdiDownload,
+  mdiLayersPlus,
+  mdiLayersTripleOutline,
+  mdiTextureBox,
+} from "@mdi/js";
 import { FieldGroup } from "../../components/controls/FieldGroup";
+import { ToggleField } from "../../components/controls/ToggleField";
 import { MdiIcon } from "../../components/icons/MdiIcon";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { supportedImageTypes } from "../import-export";
@@ -780,15 +786,12 @@ export function GeneratorPage() {
                 onChange={(event) => setRepeatWidth(Number(event.target.value))}
               />
             </label>
-            <label className={styles.toggleField}>
-              <input
-                type="checkbox"
-                checked={showDepthOverlay}
-                onChange={(event) => setShowDepthOverlay(event.target.checked)}
-              />
-              <span className={styles.toggleSwitch} aria-hidden="true" />
-              <span className={styles.toggleLabel}>Show depth overlay</span>
-            </label>
+            <ToggleField
+              checked={showDepthOverlay}
+              iconPath={mdiLayersTripleOutline}
+              label="Show depth overlay"
+              onChange={setShowDepthOverlay}
+            />
           </FieldGroup>
 
           <label className={styles.textField}>
