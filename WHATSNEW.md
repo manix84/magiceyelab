@@ -15,7 +15,7 @@
 - Added an optional grid overlay for precise tile work.
 - Added an optional tile boundary guide.
 - Added stroke/action-based undo and redo controls.
-- Added keyboard shortcuts for pencil, brush, eraser, picker, undo, and redo.
+- Added keyboard shortcuts for pencil, brush, eraser, fill, picker, shape, undo, and redo.
 - Added opposite-edge preview strips around the tile so top/bottom and left/right seams can be checked while painting.
 - Added wraparound painting so manual strokes continue across tile edges and corners.
 - Added a repeated preview panel that shows multiple tiled copies instead of stretching one tile.

@@ -71,7 +71,7 @@ Instead of relying on imported images, you can draw your own seamless repeating 
 - #️⃣ Optional grid overlay
 - ⬚ Optional tile boundary guide
 - ↩️ Stroke-based undo / redo
-- ⌨️ Tool shortcuts for pencil, brush, eraser, and picker
+- ⌨️ Tool shortcuts for pencil, brush, eraser, fill, picker, and shape
 - 🧱 Repeated preview panel showing multiple tiled copies
 - 🎨 Palette controls with hex input and recent colours
 - 🔁 Primary/secondary colour selection with quick swap

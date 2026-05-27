@@ -122,6 +122,7 @@ type StoredPatternMakerState = {
   showTileBoundary: boolean;
   imageDataUrl: string;
 };
+type PatternMakerDraftControls = Omit<StoredPatternMakerState, "imageDataUrl" | "version">;
 
 const defaultGeneratorState: StoredGeneratorState = {
   version: 1,
@@ -556,6 +557,28 @@ export function PatternMakerPage() {
   const importInputRef = useRef<HTMLInputElement>(null);
   const draftSaveTimeoutRef = useRef<number | null>(null);
   const hasRestoredDraftRef = useRef(false);
+  const handleRedoRef = useRef<() => void>(() => undefined);
+  const handleUndoRef = useRef<() => void>(() => undefined);
+  const patternMakerDraftControlsRef = useRef<PatternMakerDraftControls>({
+    selectedTool: storedPatternMakerState.selectedTool,
+    secondaryColor: storedPatternMakerState.secondaryColor,
+    selectedColor: storedPatternMakerState.selectedColor,
+    paletteColors: storedPatternMakerState.paletteColors,
+    recentColors: storedPatternMakerState.recentColors,
+    brushShape: storedPatternMakerState.brushShape,
+    brushSize: storedPatternMakerState.brushSize,
+    brushOpacity: storedPatternMakerState.brushOpacity,
+    brushHardness: storedPatternMakerState.brushHardness,
+    brushFlow: storedPatternMakerState.brushFlow,
+    brushSpacing: storedPatternMakerState.brushSpacing,
+    fillMode: storedPatternMakerState.fillMode,
+    fillTolerance: storedPatternMakerState.fillTolerance,
+    shapeBlendMode: storedPatternMakerState.shapeBlendMode,
+    shapeKind: storedPatternMakerState.shapeKind,
+    shapeMode: storedPatternMakerState.shapeMode,
+    showGrid: storedPatternMakerState.showGrid,
+    showTileBoundary: storedPatternMakerState.showTileBoundary,
+  });
 
   function selectColor(color: string) {
     const normalisedColor = normaliseHexColor(color);
@@ -615,7 +638,7 @@ export function PatternMakerPage() {
     setRecentColors((colors) => colors.filter((color) => !defaultPalette.includes(color)));
   }
 
-  function writePatternMakerDraft() {
+  const writePatternMakerDraft = useCallback(() => {
     const canvas = paintCanvasRef.current;
 
     if (!canvas || !hasRestoredDraftRef.current) {
@@ -624,35 +647,25 @@ export function PatternMakerPage() {
 
     const payload: StoredPatternMakerState = {
       version: 1,
-      selectedTool,
-      secondaryColor,
-      selectedColor,
-      paletteColors,
-      recentColors,
-      brushShape,
-      brushSize,
-      brushOpacity,
-      brushHardness,
-      brushFlow,
-      brushSpacing,
-      fillMode,
-      fillTolerance,
-      shapeBlendMode,
-      shapeKind,
-      shapeMode,
-      showGrid,
-      showTileBoundary,
+      ...patternMakerDraftControlsRef.current,
       imageDataUrl: canvas.toDataURL("image/png"),
     };
 
     try {
       window.localStorage.setItem(storageKeys.patternMaker, JSON.stringify(payload));
     } catch {
-      window.localStorage.removeItem(storageKeys.patternMaker);
+      try {
+        window.localStorage.setItem(
+          storageKeys.patternMaker,
+          JSON.stringify({ ...payload, imageDataUrl: "" }),
+        );
+      } catch {
+        window.localStorage.removeItem(storageKeys.patternMaker);
+      }
     }
-  }
+  }, []);
 
-  function schedulePatternMakerDraftSave() {
+  const schedulePatternMakerDraftSave = useCallback(() => {
     if (!hasRestoredDraftRef.current) {
       return;
     }
@@ -665,7 +678,7 @@ export function PatternMakerPage() {
       draftSaveTimeoutRef.current = null;
       writePatternMakerDraft();
     }, 250);
-  }
+  }, [writePatternMakerDraft]);
 
   function syncHistoryState() {
     setCanUndo(undoStackRef.current.length > 0);
@@ -1555,8 +1568,19 @@ export function PatternMakerPage() {
     syncHistoryState();
   }
 
+  handleRedoRef.current = handleRedo;
+  handleUndoRef.current = handleUndo;
+
   useEffect(() => {
     function handleKeyboardShortcut(event: KeyboardEvent) {
+      if (
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement ||
+        event.target instanceof HTMLSelectElement
+      ) {
+        return;
+      }
+
       if (event.ctrlKey || event.metaKey) {
         if (event.key.toLowerCase() !== "z") {
           return;
@@ -1565,19 +1589,11 @@ export function PatternMakerPage() {
         event.preventDefault();
 
         if (event.shiftKey) {
-          handleRedo();
+          handleRedoRef.current();
         } else {
-          handleUndo();
+          handleUndoRef.current();
         }
 
-        return;
-      }
-
-      if (
-        event.target instanceof HTMLInputElement ||
-        event.target instanceof HTMLTextAreaElement ||
-        event.target instanceof HTMLSelectElement
-      ) {
         return;
       }
 
@@ -1599,11 +1615,51 @@ export function PatternMakerPage() {
     window.addEventListener("keydown", handleKeyboardShortcut);
 
     return () => window.removeEventListener("keydown", handleKeyboardShortcut);
-  });
+  }, []);
 
   useEffect(() => {
+    patternMakerDraftControlsRef.current = {
+      selectedTool,
+      secondaryColor,
+      selectedColor,
+      paletteColors,
+      recentColors,
+      brushShape,
+      brushSize,
+      brushOpacity,
+      brushHardness,
+      brushFlow,
+      brushSpacing,
+      fillMode,
+      fillTolerance,
+      shapeBlendMode,
+      shapeKind,
+      shapeMode,
+      showGrid,
+      showTileBoundary,
+    };
     schedulePatternMakerDraftSave();
-  });
+  }, [
+    brushFlow,
+    brushHardness,
+    brushOpacity,
+    brushShape,
+    brushSize,
+    brushSpacing,
+    fillMode,
+    fillTolerance,
+    paletteColors,
+    recentColors,
+    schedulePatternMakerDraftSave,
+    secondaryColor,
+    selectedColor,
+    selectedTool,
+    shapeBlendMode,
+    shapeKind,
+    shapeMode,
+    showGrid,
+    showTileBoundary,
+  ]);
 
   useEffect(() => {
     updateToolPanelScrollState();
@@ -1614,7 +1670,7 @@ export function PatternMakerPage() {
 
   useEffect(() => {
     updateToolPanelScrollState();
-  });
+  }, [updateToolPanelScrollState]);
 
   useEffect(() => {
     const canvas = paintCanvasRef.current;
