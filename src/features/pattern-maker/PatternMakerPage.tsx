@@ -1243,31 +1243,26 @@ export function PatternMakerPage() {
           </FieldGroup>
 
           <FieldGroup title="Brush">
-            <div
-              className={styles.implementDemo}
-              aria-label={`${selectedTool} implement preview`}
-              style={implementDemoStyle}
-            >
-              <span className={styles.implementDemoText}>
-                <strong>{selectedTool === "eyedropper" ? "Picker" : selectedTool}</strong>
-                <span>
-                  {cursorIconPath
-                    ? selectedTool === "fill" ? selectedColor : hoverSampleColor
-                    : `${brushSize}px ${activeBrushShape}`}
-                </span>
-              </span>
-              <span
-                className={classNames(styles.implementDemoPad, {
-                  [styles.paintImplementDemo]: !cursorIconPath,
-                  [styles.squareImplementDemo]: !cursorIconPath && activeBrushShape === "square",
-                  [styles.iconImplementDemo]: cursorIconPath,
-                  [styles.eraserImplementDemo]: selectedTool === "eraser",
-                })}
-                aria-hidden="true"
+            {!cursorIconPath ? (
+              <div
+                className={styles.implementDemo}
+                aria-label={`${selectedTool} implement preview`}
+                style={implementDemoStyle}
               >
-                {cursorIconPath ? <MdiIcon path={cursorIconPath} size={1.25} /> : null}
-              </span>
-            </div>
+                <span className={styles.implementDemoText}>
+                  <strong>{selectedTool}</strong>
+                  <span>{`${brushSize}px ${activeBrushShape}`}</span>
+                </span>
+                <span
+                  className={classNames(styles.implementDemoPad, {
+                    [styles.paintImplementDemo]: true,
+                    [styles.squareImplementDemo]: activeBrushShape === "square",
+                    [styles.eraserImplementDemo]: selectedTool === "eraser",
+                  })}
+                  aria-hidden="true"
+                />
+              </div>
+            ) : null}
             <label className={styles.rangeField}>
               <span className={styles.rangeLabel}>
                 <span>Size</span>
@@ -1527,12 +1522,12 @@ export function PatternMakerPage() {
                   style={brushCursorStyle}
                   aria-hidden="true"
                 >
-                  {cursorIconPath ? <MdiIcon path={cursorIconPath} size={1} /> : null}
-                  <span className={styles.brushCursorLabel}>
-                    {cursorIconPath
-                      ? selectedTool === "fill" ? "Fill" : "Pick"
-                      : `${brushSize}px ${activeBrushShape}`}
-                  </span>
+                  {cursorIconPath ? (
+                    <span className={styles.brushCursorIcon}>
+                      <MdiIcon path={cursorIconPath} size={1} />
+                    </span>
+                  ) : null}
+                  <span className={styles.brushCursorLabel}>{`${brushSize}px ${activeBrushShape}`}</span>
                 </div>
               ) : null}
             </div>

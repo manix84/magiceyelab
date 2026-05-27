@@ -426,18 +426,65 @@ label.toggleField {
 }
 
 .iconBrushCursor {
+  width: 0.75rem;
+  min-width: 0.75rem;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+
+  &::before,
+  &::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    content: "";
+    transform: translate(-50%, -50%);
+  }
+
+  &::before {
+    width: 0.55rem;
+    aspect-ratio: 1;
+    border: 2px solid var(--brush-cursor-color);
+    border-radius: 50%;
+    background: var(--color-surface);
+    box-shadow:
+      0 0 0 1px var(--color-text),
+      0 0 0 3px var(--color-surface);
+  }
+
+  &::after {
+    width: 1.05rem;
+    height: 1.05rem;
+    background:
+      linear-gradient(var(--brush-cursor-color), var(--brush-cursor-color)) center / 100% 2px no-repeat,
+      linear-gradient(var(--brush-cursor-color), var(--brush-cursor-color)) center / 2px 100% no-repeat;
+  }
+}
+
+.brushCursorIcon {
+  position: absolute;
+  top: 0.65rem;
+  left: 0.75rem;
   display: grid;
   place-items: center;
-  width: max(2.25rem, var(--brush-cursor-size));
-  min-width: 2.25rem;
-  border-color: var(--brush-cursor-color);
-  background: color-mix(in srgb, var(--brush-cursor-color) 14%, transparent);
+  width: 2.15rem;
+  aspect-ratio: 1;
+  border: 1px solid var(--brush-cursor-color);
+  border-radius: 999px;
+  color: var(--brush-cursor-color);
+  background: color-mix(in srgb, var(--color-surface) 86%, transparent);
+  box-shadow: 0 2px 8px var(--shadow-soft);
 
   svg {
     filter:
       drop-shadow(0 0 1px var(--color-surface))
       drop-shadow(0 1px 2px var(--shadow-soft));
   }
+}
+
+.iconBrushCursor .brushCursorLabel {
+  display: none;
 }
 
 .squareBrushCursor {
