@@ -2249,6 +2249,7 @@ export function PatternMakerPage() {
                   ref={importInputRef}
                   className={styles.hiddenInput}
                   type="file"
+                  aria-label="Import pattern PNG"
                   accept="image/png,image/jpeg,image/webp"
                   onChange={handleImportPattern}
                 />
