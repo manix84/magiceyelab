@@ -1343,16 +1343,18 @@ export function PatternMakerPage() {
 
       <div className={styles.workspaceGrid}>
         <aside className={styles.toolPanel} aria-label="Pattern maker controls">
-          <div className={styles.iconRow} aria-label="Pattern history">
-            <button type="button" aria-label="Undo" disabled={!canUndo} onClick={handleUndo}>
-              <MdiIcon path={mdiUndo} />
-            </button>
-            <button type="button" aria-label="Redo" disabled={!canRedo} onClick={handleRedo}>
-              <MdiIcon path={mdiRedo} />
-            </button>
-          </div>
-
-          <FieldGroup title="Tools">
+          <FieldGroup title="Paint">
+            <div className={styles.panelHeader}>
+              <span className={styles.panelSubheading}>Tools</span>
+              <div className={styles.iconRow} aria-label="Pattern history">
+                <button type="button" aria-label="Undo" disabled={!canUndo} onClick={handleUndo}>
+                  <MdiIcon path={mdiUndo} />
+                </button>
+                <button type="button" aria-label="Redo" disabled={!canRedo} onClick={handleRedo}>
+                  <MdiIcon path={mdiRedo} />
+                </button>
+              </div>
+            </div>
             <div className={styles.segmentedControl} aria-label="Pattern tool">
               <button
                 type="button"
@@ -1395,51 +1397,57 @@ export function PatternMakerPage() {
                 Fill
               </button>
             </div>
-          </FieldGroup>
 
-          <FieldGroup title="Implement">
-            <div
-              className={styles.implementDemo}
-              aria-label={`${selectedTool} implement preview`}
-              style={implementDemoStyle}
-            >
-              <span className={styles.implementDemoText}>
-                <strong>{selectedTool}</strong>
-                <span>
-                  {usesBrushStamp
-                    ? `${brushSize}px ${activeBrushShape}${usesSoftBrushControls ? ` / ${brushFlow}% flow` : ""}`
-                    : selectedTool === "fill"
-                      ? `${fillMode} fill / tolerance ${fillTolerance}`
-                      : "sample exact pixel colour"}
-                </span>
-              </span>
-              <span
-                className={classNames(styles.implementDemoPad, {
-                  [styles.strokeImplementDemo]: usesBrushStamp,
-                  [styles.squareStrokeDemo]: usesBrushStamp && activeBrushShape === "square",
-                  [styles.eraserStrokeDemo]: selectedTool === "eraser",
-                  [styles.fillImplementDemo]: selectedTool === "fill",
-                  [styles.pickerImplementDemo]: selectedTool === "eyedropper",
-                })}
-                aria-hidden="true"
+            <div className={styles.panelBlock}>
+              <span className={styles.panelSubheading}>Preview</span>
+              <div
+                className={styles.implementDemo}
+                aria-label={`${selectedTool} implement preview`}
+                style={implementDemoStyle}
               >
-                {usesBrushStamp ? (
-                  <>
-                    {Array.from({ length: 7 }, (_, index) => (
-                      <span className={styles.demoStamp} key={index} />
-                    ))}
-                  </>
-                ) : cursorIconPath ? (
-                  <MdiIcon path={cursorIconPath} />
-                ) : null}
-              </span>
-            </div>
-            {usesBrushStamp ? (
-              <label className={styles.rangeField}>
-                <span className={styles.rangeLabel}>
-                  <span>Size</span>
-                  <output>{brushSize}px</output>
+                <span className={styles.implementDemoText}>
+                  <strong>{selectedTool}</strong>
+                  <span>
+                    {usesBrushStamp
+                      ? `${brushSize}px ${activeBrushShape}${usesSoftBrushControls ? ` / ${brushFlow}% flow` : ""}`
+                      : selectedTool === "fill"
+                        ? `${fillMode} fill / tolerance ${fillTolerance}`
+                        : "sample exact pixel colour"}
+                  </span>
                 </span>
+                <span
+                  className={classNames(styles.implementDemoPad, {
+                    [styles.strokeImplementDemo]: usesBrushStamp,
+                    [styles.squareStrokeDemo]: usesBrushStamp && activeBrushShape === "square",
+                    [styles.eraserStrokeDemo]: selectedTool === "eraser",
+                    [styles.fillImplementDemo]: selectedTool === "fill",
+                    [styles.pickerImplementDemo]: selectedTool === "eyedropper",
+                  })}
+                  aria-hidden="true"
+                >
+                  {usesBrushStamp ? (
+                    <>
+                      {Array.from({ length: 7 }, (_, index) => (
+                        <span className={styles.demoStamp} key={index} />
+                      ))}
+                    </>
+                  ) : cursorIconPath ? (
+                    <MdiIcon path={cursorIconPath} />
+                  ) : null}
+                </span>
+              </div>
+            </div>
+
+            {usesBrushStamp ? (
+              <div className={styles.panelBlock}>
+                <span className={styles.panelSubheading}>
+                  {selectedTool === "pencil" ? "Pencil Settings" : `${implementControlLabel} Settings`}
+                </span>
+                <label className={styles.rangeField}>
+                  <span className={styles.rangeLabel}>
+                    <span>Size</span>
+                    <output>{brushSize}px</output>
+                  </span>
                   <input
                     type="range"
                     aria-label={
@@ -1450,92 +1458,95 @@ export function PatternMakerPage() {
                     min="1"
                     max="96"
                     value={brushSize}
-                  onChange={(event) => setBrushSize(Number(event.target.value))}
-                />
-              </label>
-            ) : null}
-            {usesSoftBrushControls ? (
-              <>
-                <label className={styles.rangeField}>
-                  <span className={styles.rangeLabel}>
-                    <span>Opacity</span>
-                    <output>{brushOpacity}%</output>
-                  </span>
-                  <input
-                    type="range"
-                    aria-label={`${implementControlLabel} opacity`}
-                    min="10"
-                    max="100"
-                    value={brushOpacity}
-                    onChange={(event) => setBrushOpacity(Number(event.target.value))}
+                    onChange={(event) => setBrushSize(Number(event.target.value))}
                   />
                 </label>
-                <label className={styles.rangeField}>
-                  <span className={styles.rangeLabel}>
-                    <span>Flow</span>
-                    <output>{brushFlow}%</output>
-                  </span>
-                  <input
-                    type="range"
-                    aria-label={`${implementControlLabel} flow`}
-                    min="1"
-                    max="100"
-                    value={brushFlow}
-                    onChange={(event) => setBrushFlow(Number(event.target.value))}
-                  />
-                </label>
-                <label className={styles.rangeField}>
-                  <span className={styles.rangeLabel}>
-                    <span>Hardness</span>
-                    <output>{brushHardness}%</output>
-                  </span>
-                  <input
-                    type="range"
-                    aria-label={`${implementControlLabel} hardness`}
-                    min="0"
-                    max="100"
-                    value={brushHardness}
-                    onChange={(event) => setBrushHardness(Number(event.target.value))}
-                  />
-                </label>
-                <label className={styles.rangeField}>
-                  <span className={styles.rangeLabel}>
-                    <span>Spacing</span>
-                    <output>{brushSpacing}%</output>
-                  </span>
-                  <input
-                    type="range"
-                    aria-label={`${implementControlLabel} spacing`}
-                    min="5"
-                    max="100"
-                    value={brushSpacing}
-                    onChange={(event) => setBrushSpacing(Number(event.target.value))}
-                  />
-                </label>
-              </>
-            ) : null}
-            {usesBrushShapeControl ? (
-              <div className={styles.shapeControl} aria-label={`${implementControlLabel} shape`}>
-                <button
-                  type="button"
-                  aria-pressed={brushShape === "circle"}
-                  onClick={() => setBrushShape("circle")}
-                >
-                  <MdiIcon path={mdiShapeCirclePlus} />
-                  Circle
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={brushShape === "square"}
-                  onClick={() => setBrushShape("square")}
-                >
-                  <MdiIcon path={mdiShapeSquarePlus} />
-                  Square
-                </button>
+                {usesSoftBrushControls ? (
+                  <>
+                    <label className={styles.rangeField}>
+                      <span className={styles.rangeLabel}>
+                        <span>Opacity</span>
+                        <output>{brushOpacity}%</output>
+                      </span>
+                      <input
+                        type="range"
+                        aria-label={`${implementControlLabel} opacity`}
+                        min="10"
+                        max="100"
+                        value={brushOpacity}
+                        onChange={(event) => setBrushOpacity(Number(event.target.value))}
+                      />
+                    </label>
+                    <label className={styles.rangeField}>
+                      <span className={styles.rangeLabel}>
+                        <span>Flow</span>
+                        <output>{brushFlow}%</output>
+                      </span>
+                      <input
+                        type="range"
+                        aria-label={`${implementControlLabel} flow`}
+                        min="1"
+                        max="100"
+                        value={brushFlow}
+                        onChange={(event) => setBrushFlow(Number(event.target.value))}
+                      />
+                    </label>
+                    <label className={styles.rangeField}>
+                      <span className={styles.rangeLabel}>
+                        <span>Hardness</span>
+                        <output>{brushHardness}%</output>
+                      </span>
+                      <input
+                        type="range"
+                        aria-label={`${implementControlLabel} hardness`}
+                        min="0"
+                        max="100"
+                        value={brushHardness}
+                        onChange={(event) => setBrushHardness(Number(event.target.value))}
+                      />
+                    </label>
+                    <label className={styles.rangeField}>
+                      <span className={styles.rangeLabel}>
+                        <span>Spacing</span>
+                        <output>{brushSpacing}%</output>
+                      </span>
+                      <input
+                        type="range"
+                        aria-label={`${implementControlLabel} spacing`}
+                        min="5"
+                        max="100"
+                        value={brushSpacing}
+                        onChange={(event) => setBrushSpacing(Number(event.target.value))}
+                      />
+                    </label>
+                  </>
+                ) : null}
+                {usesBrushShapeControl ? (
+                  <div className={styles.shapeControl} aria-label={`${implementControlLabel} shape`}>
+                    <button
+                      type="button"
+                      aria-pressed={brushShape === "circle"}
+                      onClick={() => setBrushShape("circle")}
+                    >
+                      <MdiIcon path={mdiShapeCirclePlus} />
+                      Circle
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={brushShape === "square"}
+                      onClick={() => setBrushShape("square")}
+                    >
+                      <MdiIcon path={mdiShapeSquarePlus} />
+                      Square
+                    </button>
+                  </div>
+                ) : null}
               </div>
             ) : null}
+
             {usesFillControls ? (
-              <>
+              <div className={styles.panelBlock}>
+                <span className={styles.panelSubheading}>Fill Settings</span>
                 <div className={styles.shapeControl} aria-label="Fill mode">
                   <button
                     type="button"
@@ -1568,142 +1579,153 @@ export function PatternMakerPage() {
                     onChange={(event) => setFillTolerance(Number(event.target.value))}
                   />
                 </label>
-              </>
-            ) : null}
-            {selectedTool === "eyedropper" ? (
-              <p className={styles.transferMessage}>Click the tile to sample a colour.</p>
-            ) : null}
-          </FieldGroup>
-
-          <FieldGroup title="View">
-            <label className={styles.toggleField}>
-              <input
-                type="checkbox"
-                checked={showGrid}
-                onChange={(event) => setShowGrid(event.target.checked)}
-              />
-              <span className={styles.toggleSwitch} aria-hidden="true" />
-              <span className={styles.toggleLabel}>
-                <MdiIcon path={mdiGrid} />
-                Show grid
-              </span>
-            </label>
-            <label className={styles.toggleField}>
-              <input
-                type="checkbox"
-                checked={showTileBoundary}
-                onChange={(event) => setShowTileBoundary(event.target.checked)}
-              />
-              <span className={styles.toggleSwitch} aria-hidden="true" />
-              <span className={styles.toggleLabel}>
-                <MdiIcon path={mdiVectorSquare} />
-                Show boundary
-              </span>
-            </label>
-          </FieldGroup>
-
-          {usesPaletteControls ? (
-            <FieldGroup title="Palette">
-              <label className={styles.colorField}>
-                <span>Colour</span>
-                <span className={styles.colorInputGroup}>
-                  <span
-                    className={styles.currentColor}
-                    style={{ backgroundColor: selectedColor }}
-                    aria-hidden="true"
-                  />
-                  <input
-                    type="text"
-                    aria-label="Current colour hex"
-                    value={colorInputValue}
-                    onChange={(event) => {
-                      setColorInputValue(event.target.value);
-
-                      if (normaliseHexColor(event.target.value)) {
-                        selectColor(event.target.value);
-                      }
-                    }}
-                    onBlur={() => setColorInputValue(selectedColor)}
-                  />
-                </span>
-              </label>
-              <div className={styles.paletteRow}>
-                {palette.map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    aria-label={`Select ${color}`}
-                    aria-pressed={selectedColor === color}
-                    onClick={() => selectColor(color)}
-                    style={{ backgroundColor: color }}
-                  />
-                ))}
               </div>
-              {recentColors.length > 0 ? (
-                <div className={styles.paletteRow} aria-label="Recent colours">
-                  {recentColors.map((color) => (
+            ) : null}
+
+            {selectedTool === "eyedropper" ? (
+              <div className={styles.panelBlock}>
+                <p className={styles.transferMessage}>Click the tile to sample a colour.</p>
+              </div>
+            ) : null}
+          </FieldGroup>
+
+          <FieldGroup title="Colour & View">
+            {usesPaletteControls ? (
+              <div className={styles.panelBlock}>
+                <span className={styles.panelSubheading}>Palette</span>
+                <label className={styles.colorField}>
+                  <span>Colour</span>
+                  <span className={styles.colorInputGroup}>
+                    <span
+                      className={styles.currentColor}
+                      style={{ backgroundColor: selectedColor }}
+                      aria-hidden="true"
+                    />
+                    <input
+                      type="text"
+                      aria-label="Current colour hex"
+                      value={colorInputValue}
+                      onChange={(event) => {
+                        setColorInputValue(event.target.value);
+
+                        if (normaliseHexColor(event.target.value)) {
+                          selectColor(event.target.value);
+                        }
+                      }}
+                      onBlur={() => setColorInputValue(selectedColor)}
+                    />
+                  </span>
+                </label>
+                <div className={styles.paletteRow}>
+                  {palette.map((color) => (
                     <button
                       key={color}
                       type="button"
-                      aria-label={`Select recent ${color}`}
+                      aria-label={`Select ${color}`}
                       aria-pressed={selectedColor === color}
                       onClick={() => selectColor(color)}
                       style={{ backgroundColor: color }}
                     />
                   ))}
                 </div>
-              ) : null}
-              <button type="button">
-                <MdiIcon path={mdiPalette} />
-                Edit palette
-              </button>
-            </FieldGroup>
-          ) : null}
-
-          <button className={styles.primaryAction} type="button" onClick={handleRandomPattern}>
-            <MdiIcon path={mdiDiceMultiple} />
-            Random pattern
-          </button>
-
-          <FieldGroup title="Pattern File">
-            <div className={styles.actionStack}>
-              <input
-                ref={importInputRef}
-                className={styles.hiddenInput}
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                onChange={handleImportPattern}
-              />
-              <button type="button" onClick={() => importInputRef.current?.click()}>
-                <MdiIcon path={mdiUpload} />
-                Import PNG
-              </button>
-              <button type="button" onClick={handleExportPattern}>
-                <MdiIcon path={mdiDownload} />
-                Export PNG
-              </button>
-              <button type="button" onClick={handleClearTile}>
-                <MdiIcon path={mdiTrashCanOutline} />
-                Clear tile
-              </button>
-            </div>
-          </FieldGroup>
-
-          <FieldGroup title="Generator">
-            <div className={styles.actionStack}>
-              <button type="button" onClick={handleLoadGeneratorPattern}>
-                <MdiIcon path={mdiImageEdit} />
-                Edit generator pattern
-              </button>
-              <button type="button" onClick={handleUseInGenerator}>
-                <MdiIcon path={mdiSend} />
-                Use in generator
-              </button>
-            </div>
-            {transferMessage ? (
-              <p className={styles.transferMessage}>{transferMessage}</p>
+                {recentColors.length > 0 ? (
+                  <div className={styles.paletteRow} aria-label="Recent colours">
+                    {recentColors.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        aria-label={`Select recent ${color}`}
+                        aria-pressed={selectedColor === color}
+                        onClick={() => selectColor(color)}
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                ) : null}
+                <button type="button">
+                  <MdiIcon path={mdiPalette} />
+                  Edit palette
+                </button>
+              </div>
             ) : null}
+
+            <div className={styles.panelBlock}>
+              <span className={styles.panelSubheading}>View</span>
+              <label className={styles.toggleField}>
+                <input
+                  type="checkbox"
+                  checked={showGrid}
+                  onChange={(event) => setShowGrid(event.target.checked)}
+                />
+                <span className={styles.toggleSwitch} aria-hidden="true" />
+                <span className={styles.toggleLabel}>
+                  <MdiIcon path={mdiGrid} />
+                  Show grid
+                </span>
+              </label>
+              <label className={styles.toggleField}>
+                <input
+                  type="checkbox"
+                  checked={showTileBoundary}
+                  onChange={(event) => setShowTileBoundary(event.target.checked)}
+                />
+                <span className={styles.toggleSwitch} aria-hidden="true" />
+                <span className={styles.toggleLabel}>
+                  <MdiIcon path={mdiVectorSquare} />
+                  Show boundary
+                </span>
+              </label>
+            </div>
           </FieldGroup>
+
+          <FieldGroup title="Pattern">
+            <div className={styles.panelBlock}>
+              <span className={styles.panelSubheading}>Tile Actions</span>
+              <div className={styles.actionStack}>
+                <button type="button" onClick={handleRandomPattern}>
+                  <MdiIcon path={mdiDiceMultiple} />
+                  Random pattern
+                </button>
+                <input
+                  ref={importInputRef}
+                  className={styles.hiddenInput}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handleImportPattern}
+                />
+                <button type="button" onClick={() => importInputRef.current?.click()}>
+                  <MdiIcon path={mdiUpload} />
+                  Import PNG
+                </button>
+                <button type="button" onClick={handleExportPattern}>
+                  <MdiIcon path={mdiDownload} />
+                  Export PNG
+                </button>
+                <button type="button" onClick={handleClearTile}>
+                  <MdiIcon path={mdiTrashCanOutline} />
+                  Clear tile
+                </button>
+              </div>
+            </div>
+
+            <div className={styles.panelBlock}>
+              <span className={styles.panelSubheading}>Generator</span>
+              <div className={styles.actionStack}>
+                <button type="button" onClick={handleLoadGeneratorPattern}>
+                  <MdiIcon path={mdiImageEdit} />
+                  Edit generator pattern
+                </button>
+                <button type="button" onClick={handleUseInGenerator}>
+                  <MdiIcon path={mdiSend} />
+                  Use in generator
+                </button>
+              </div>
+              {transferMessage ? (
+                <p className={styles.transferMessage}>{transferMessage}</p>
+              ) : null}
+            </div>
+          </FieldGroup>
+
         </aside>
 
         <section

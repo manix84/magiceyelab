@@ -10,6 +10,40 @@
 
 .toolPanel {
   @include mixins.tool-panel;
+  border: 0;
+  padding: 0;
+  background: transparent;
+
+  > section {
+    border: 1px solid var(--color-border-soft);
+    border-radius: 8px;
+    padding: 1rem;
+    background: var(--color-surface);
+  }
+}
+
+.panelHeader,
+.panelBlock {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.panelHeader {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.panelBlock {
+  border-top: 1px solid var(--color-border-soft);
+  padding-top: 0.75rem;
+}
+
+.panelSubheading {
+  color: var(--color-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .segmentedControl {
