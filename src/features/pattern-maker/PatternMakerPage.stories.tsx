@@ -38,7 +38,8 @@ export const SeamlessTile: Story = {
 
     await userEvent.click(canvas.getByRole("button", { name: "Fill" }));
     await expect(canvas.getByRole("slider", { name: "Fill tolerance" })).toBeVisible();
-    await expect(canvas.getByLabelText("Current colour hex")).toBeVisible();
+    await expect(canvas.getByLabelText("Primary colour hex")).toBeVisible();
+    await expect(canvas.getByLabelText("Secondary colour hex")).toBeVisible();
     await expect(canvas.getByLabelText("Show grid")).toBeChecked();
     await expect(canvas.getByLabelText("Show boundary")).toBeChecked();
     await expect(canvas.getByRole("button", { name: "Import PNG" })).toBeVisible();

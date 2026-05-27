@@ -357,6 +357,13 @@ label.toggleField {
   font-weight: 700;
 }
 
+.dualColorField {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: end;
+}
+
 .colorInputGroup {
   display: grid;
   grid-template-columns: 2.5rem minmax(0, 1fr);
@@ -379,6 +386,13 @@ label.toggleField {
       outline: 3px solid rgba(var(--color-accent-rgb), 0.16);
     }
   }
+}
+
+.colorSwapButton {
+  align-self: end;
+  width: 2.45rem;
+  min-height: 2.4rem;
+  padding: 0;
 }
 
 .currentColor {

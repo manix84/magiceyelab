@@ -105,6 +105,7 @@ Allow users to create a seamless repeating pattern directly in the browser.
 - Eyedropper
 - Colour picker
 - Palette support with hex entry and recent colours
+- Primary/secondary colour selectors with quick swap
 - Editable de-duplicated palette controls
 - Adjustable brush size
 - Adjustable brush opacity
@@ -252,6 +253,7 @@ Users can paint their own hidden image and generate a stereogram from it.
 - Add shape tool for line, rectangle, and ellipse drawing
 - Add eyedropper colour picking
 - Add hex colour entry and recent colour swatches
+- Add primary/secondary colour selectors with quick swap
 - Add editable de-duplicated palette controls
 - Add brush size controls
 - Add brush opacity, flow, hardness, spacing, and shared tip shape controls

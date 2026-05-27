@@ -20,6 +20,7 @@
 - Added wraparound painting so manual strokes continue across tile edges and corners.
 - Added a repeated preview panel that shows multiple tiled copies instead of stretching one tile.
 - Added hex colour entry and recent colour swatches.
+- Added primary and secondary colour selectors with a quick swap control.
 - Added editable palette controls with duplicate prevention.
 - Updated random pattern generation so generated motifs wrap across tile edges.
 - Added pattern PNG import, export, and clear tile controls.

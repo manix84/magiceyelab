@@ -74,6 +74,7 @@ Instead of relying on imported images, you can draw your own seamless repeating 
 - ⌨️ Tool shortcuts for pencil, brush, eraser, and picker
 - 🧱 Repeated preview panel showing multiple tiled copies
 - 🎨 Palette controls with hex input and recent colours
+- 🔁 Primary/secondary colour selection with quick swap
 - 🧰 Editable de-duplicated palette controls
 - 🔗 Send the current tile to the Generator, or edit the Generator's current pattern
 - 📥 Import/export pattern PNGs

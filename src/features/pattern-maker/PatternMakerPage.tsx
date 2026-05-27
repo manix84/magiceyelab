@@ -99,6 +99,7 @@ type StoredGeneratorState = {
 type StoredPatternMakerState = {
   version: 1;
   paletteColors: string[];
+  secondaryColor: string;
   selectedTool: PatternTool;
   selectedColor: string;
   recentColors: string[];
@@ -134,6 +135,7 @@ const defaultPatternMakerState: StoredPatternMakerState = {
   version: 1,
   selectedTool: "brush",
   selectedColor: defaultPalette[0],
+  secondaryColor: defaultPalette[1],
   paletteColors: defaultPalette,
   recentColors: [],
   brushShape: "circle",
@@ -262,6 +264,8 @@ function readStoredPatternMakerState(): StoredPatternMakerState {
     const parsedValue = JSON.parse(storedValue) as Partial<StoredPatternMakerState>;
     const selectedColor = normaliseHexColor(parsedValue.selectedColor ?? "")
       ?? defaultPatternMakerState.selectedColor;
+    const secondaryColor = normaliseHexColor(parsedValue.secondaryColor ?? "")
+      ?? defaultPatternMakerState.secondaryColor;
     const paletteColors = normaliseColorList(
       parsedValue.paletteColors,
       defaultPatternMakerState.paletteColors,
@@ -276,6 +280,7 @@ function readStoredPatternMakerState(): StoredPatternMakerState {
       )
         ? parsedValue.selectedTool as PatternTool
         : defaultPatternMakerState.selectedTool,
+      secondaryColor,
       selectedColor,
       paletteColors,
       recentColors: Array.isArray(parsedValue.recentColors)
@@ -470,8 +475,14 @@ export function PatternMakerPage() {
   const [selectedColor, setSelectedColor] = useState(
     storedPatternMakerState.selectedColor,
   );
+  const [secondaryColor, setSecondaryColor] = useState(
+    storedPatternMakerState.secondaryColor,
+  );
   const [colorInputValue, setColorInputValue] = useState(
     storedPatternMakerState.selectedColor,
+  );
+  const [secondaryColorInputValue, setSecondaryColorInputValue] = useState(
+    storedPatternMakerState.secondaryColor,
   );
   const [isPaletteEditing, setIsPaletteEditing] = useState(false);
   const [paletteColors, setPaletteColors] = useState<string[]>(
@@ -554,6 +565,27 @@ export function PatternMakerPage() {
     ].slice(0, 5));
   }
 
+  function selectSecondaryColor(color: string) {
+    const normalisedColor = normaliseHexColor(color);
+
+    if (!normalisedColor) {
+      return;
+    }
+
+    setSecondaryColor(normalisedColor);
+    setSecondaryColorInputValue(normalisedColor);
+  }
+
+  function swapSelectedColors() {
+    const nextPrimaryColor = secondaryColor;
+    const nextSecondaryColor = selectedColor;
+
+    setSelectedColor(nextPrimaryColor);
+    setColorInputValue(nextPrimaryColor);
+    setSecondaryColor(nextSecondaryColor);
+    setSecondaryColorInputValue(nextSecondaryColor);
+  }
+
   function addCurrentColorToPalette() {
     setPaletteColors((colors) => {
       if (colors.includes(selectedColor)) {
@@ -588,6 +620,7 @@ export function PatternMakerPage() {
     const payload: StoredPatternMakerState = {
       version: 1,
       selectedTool,
+      secondaryColor,
       selectedColor,
       paletteColors,
       recentColors,
@@ -2059,29 +2092,62 @@ export function PatternMakerPage() {
             {usesPaletteControls ? (
               <div className={styles.panelBlock}>
                 <span className={styles.panelSubheading}>Palette</span>
-                <label className={styles.colorField}>
-                  <span>Colour</span>
-                  <span className={styles.colorInputGroup}>
-                    <span
-                      className={styles.currentColor}
-                      style={{ backgroundColor: selectedColor }}
-                      aria-hidden="true"
-                    />
-                    <input
-                      type="text"
-                      aria-label="Current colour hex"
-                      value={colorInputValue}
-                      onChange={(event) => {
-                        setColorInputValue(event.target.value);
+                <div className={styles.dualColorField}>
+                  <label className={styles.colorField}>
+                    <span>Primary</span>
+                    <span className={styles.colorInputGroup}>
+                      <span
+                        className={styles.currentColor}
+                        style={{ backgroundColor: selectedColor }}
+                        aria-hidden="true"
+                      />
+                      <input
+                        type="text"
+                        aria-label="Primary colour hex"
+                        value={colorInputValue}
+                        onChange={(event) => {
+                          setColorInputValue(event.target.value);
 
-                        if (normaliseHexColor(event.target.value)) {
-                          selectColor(event.target.value);
-                        }
-                      }}
-                      onBlur={() => setColorInputValue(selectedColor)}
-                    />
-                  </span>
-                </label>
+                          if (normaliseHexColor(event.target.value)) {
+                            selectColor(event.target.value);
+                          }
+                        }}
+                        onBlur={() => setColorInputValue(selectedColor)}
+                      />
+                    </span>
+                  </label>
+                  <button
+                    className={styles.colorSwapButton}
+                    type="button"
+                    aria-label="Swap primary and secondary colours"
+                    onClick={swapSelectedColors}
+                  >
+                    <MdiIcon path={mdiSwapHorizontal} />
+                  </button>
+                  <label className={styles.colorField}>
+                    <span>Secondary</span>
+                    <span className={styles.colorInputGroup}>
+                      <span
+                        className={styles.currentColor}
+                        style={{ backgroundColor: secondaryColor }}
+                        aria-hidden="true"
+                      />
+                      <input
+                        type="text"
+                        aria-label="Secondary colour hex"
+                        value={secondaryColorInputValue}
+                        onChange={(event) => {
+                          setSecondaryColorInputValue(event.target.value);
+
+                          if (normaliseHexColor(event.target.value)) {
+                            selectSecondaryColor(event.target.value);
+                          }
+                        }}
+                        onBlur={() => setSecondaryColorInputValue(secondaryColor)}
+                      />
+                    </span>
+                  </label>
+                </div>
                 <div className={styles.paletteRow}>
                   {paletteColors.map((color) => (
                     <span className={styles.paletteSwatch} key={color}>

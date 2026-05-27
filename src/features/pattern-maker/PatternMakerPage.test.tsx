@@ -161,7 +161,7 @@ describe("PatternMakerPage", () => {
 
     expect(screen.getByRole("slider", { name: "Eraser size" })).toHaveValue("36");
     expect(screen.getByRole("slider", { name: "Eraser opacity" })).toHaveValue("100");
-    expect(screen.queryByLabelText("Current colour hex")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Primary colour hex")).not.toBeInTheDocument();
 
     const canvas = screen.getByLabelText("Pattern painting tile") as HTMLCanvasElement;
     vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue({
@@ -344,19 +344,33 @@ describe("PatternMakerPage", () => {
     const user = userEvent.setup();
     renderPatternMakerPage();
 
-    await user.clear(screen.getByLabelText("Current colour hex"));
-    await user.type(screen.getByLabelText("Current colour hex"), "#abcdef");
+    await user.clear(screen.getByLabelText("Primary colour hex"));
+    await user.type(screen.getByLabelText("Primary colour hex"), "#abcdef");
 
-    expect(screen.getByLabelText("Current colour hex")).toHaveValue("#abcdef");
+    expect(screen.getByLabelText("Primary colour hex")).toHaveValue("#abcdef");
     expect(screen.getByLabelText("Select recent #abcdef")).toBeInTheDocument();
+  });
+
+  it("supports secondary colour selection and quick swapping", async () => {
+    const user = userEvent.setup();
+    renderPatternMakerPage();
+
+    await user.clear(screen.getByLabelText("Primary colour hex"));
+    await user.type(screen.getByLabelText("Primary colour hex"), "#abcdef");
+    await user.clear(screen.getByLabelText("Secondary colour hex"));
+    await user.type(screen.getByLabelText("Secondary colour hex"), "#123456");
+    await user.click(screen.getByRole("button", { name: "Swap primary and secondary colours" }));
+
+    expect(screen.getByLabelText("Primary colour hex")).toHaveValue("#123456");
+    expect(screen.getByLabelText("Secondary colour hex")).toHaveValue("#abcdef");
   });
 
   it("edits the palette without duplicating colours", async () => {
     const user = userEvent.setup();
     renderPatternMakerPage();
 
-    await user.clear(screen.getByLabelText("Current colour hex"));
-    await user.type(screen.getByLabelText("Current colour hex"), "#abcdef");
+    await user.clear(screen.getByLabelText("Primary colour hex"));
+    await user.type(screen.getByLabelText("Primary colour hex"), "#abcdef");
     await user.click(screen.getByRole("button", { name: "Edit palette" }));
     await user.click(screen.getByRole("button", { name: "Add current colour" }));
 
