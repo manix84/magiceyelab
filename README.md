@@ -60,6 +60,7 @@ Instead of relying on imported images, you can draw your own seamless repeating 
 - ✏️ Pixel-snapped Pencil mode with hard 1px-capable square stamps
 - 🧽 Transparent Eraser mode with brush-style size, opacity, flow, hardness, and spacing
 - 🪣 Contiguous and global Fill modes with tolerance control
+- ▭ Shape tool for line, rectangle, and ellipse drawing with paint/erase modes
 - 💧 Eyedropper colour picking from the tile
 - 🖌️ Adjustable brush size
 - 🌫️ Brush opacity, flow, hardness, spacing, and circle/square shape controls

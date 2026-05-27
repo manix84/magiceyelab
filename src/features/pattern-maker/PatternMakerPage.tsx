@@ -22,6 +22,7 @@ import {
   mdiSend,
   mdiShapeCirclePlus,
   mdiShapeSquarePlus,
+  mdiVectorLine,
   mdiSwapHorizontal,
   mdiTrashCanOutline,
   mdiUndo,
@@ -45,15 +46,24 @@ const defaultBrushFlow = 35;
 const defaultBrushSpacing = 8;
 const maxHistoryStates = 24;
 const acceptedPatternTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
-type PatternTool = "pencil" | "brush" | "eraser" | "eyedropper" | "fill";
+type PatternTool = "pencil" | "brush" | "eraser" | "eyedropper" | "fill" | "shape";
 type BrushShape = "circle" | "square";
 type FillMode = "contiguous" | "global";
+type ShapeKind = "line" | "rectangle" | "ellipse";
+type ShapeMode = "stroke" | "fill" | "stroke-and-fill";
+type ShapeBlendMode = "paint" | "erase";
 type CanvasPoint = {
   x: number;
   y: number;
 };
 type StrokePoint = CanvasPoint & {
   pressure: number;
+};
+type ShapeDraft = {
+  constrain: boolean;
+  current: CanvasPoint;
+  fromCenter: boolean;
+  start: CanvasPoint;
 };
 type BrushCursorStyle = CSSProperties & {
   "--brush-cursor-color": string;
@@ -93,6 +103,9 @@ type StoredPatternMakerState = {
   brushSpacing: number;
   fillMode: FillMode;
   fillTolerance: number;
+  shapeBlendMode: ShapeBlendMode;
+  shapeKind: ShapeKind;
+  shapeMode: ShapeMode;
   showGrid: boolean;
   showTileBoundary: boolean;
   imageDataUrl: string;
@@ -123,6 +136,9 @@ const defaultPatternMakerState: StoredPatternMakerState = {
   brushSpacing: defaultBrushSpacing,
   fillMode: "contiguous",
   fillTolerance: 8,
+  shapeBlendMode: "paint",
+  shapeKind: "rectangle",
+  shapeMode: "stroke",
   showGrid: true,
   showTileBoundary: true,
   imageDataUrl: "",
@@ -243,7 +259,7 @@ function readStoredPatternMakerState(): StoredPatternMakerState {
       ...defaultPatternMakerState,
       ...parsedValue,
       version: 1 as const,
-      selectedTool: ["brush", "eraser", "eyedropper", "fill", "pencil"].includes(
+      selectedTool: ["brush", "eraser", "eyedropper", "fill", "pencil", "shape"].includes(
         parsedValue.selectedTool ?? "",
       )
         ? parsedValue.selectedTool as PatternTool
@@ -293,6 +309,13 @@ function readStoredPatternMakerState(): StoredPatternMakerState {
         64,
         defaultPatternMakerState.fillTolerance,
       ),
+      shapeBlendMode: parsedValue.shapeBlendMode === "erase" ? "erase" as const : "paint" as const,
+      shapeKind: ["line", "rectangle", "ellipse"].includes(parsedValue.shapeKind ?? "")
+        ? parsedValue.shapeKind as ShapeKind
+        : defaultPatternMakerState.shapeKind,
+      shapeMode: ["stroke", "fill", "stroke-and-fill"].includes(parsedValue.shapeMode ?? "")
+        ? parsedValue.shapeMode as ShapeMode
+        : defaultPatternMakerState.shapeMode,
       showGrid: parsedValue.showGrid !== false,
       showTileBoundary: parsedValue.showTileBoundary !== false,
       imageDataUrl:
@@ -438,6 +461,16 @@ export function PatternMakerPage() {
   const [fillTolerance, setFillTolerance] = useState(
     storedPatternMakerState.fillTolerance,
   );
+  const [shapeBlendMode, setShapeBlendMode] = useState<ShapeBlendMode>(
+    storedPatternMakerState.shapeBlendMode,
+  );
+  const [shapeDraft, setShapeDraft] = useState<ShapeDraft | null>(null);
+  const [shapeKind, setShapeKind] = useState<ShapeKind>(
+    storedPatternMakerState.shapeKind,
+  );
+  const [shapeMode, setShapeMode] = useState<ShapeMode>(
+    storedPatternMakerState.shapeMode,
+  );
   const [showGrid, setShowGrid] = useState(storedPatternMakerState.showGrid);
   const [showTileBoundary, setShowTileBoundary] = useState(
     storedPatternMakerState.showTileBoundary,
@@ -458,6 +491,7 @@ export function PatternMakerPage() {
   const strokeBaseRef = useRef<ImageData | null>(null);
   const strokeCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const strokeContextRef = useRef<CanvasRenderingContext2D | null>(null);
+  const shapeDraftRef = useRef<ShapeDraft | null>(null);
   const undoStackRef = useRef<ImageData[]>([]);
   const redoStackRef = useRef<ImageData[]>([]);
   const importInputRef = useRef<HTMLInputElement>(null);
@@ -499,6 +533,9 @@ export function PatternMakerPage() {
       brushSpacing,
       fillMode,
       fillTolerance,
+      shapeBlendMode,
+      shapeKind,
+      shapeMode,
       showGrid,
       showTileBoundary,
       imageDataUrl: canvas.toDataURL("image/png"),
@@ -529,6 +566,11 @@ export function PatternMakerPage() {
   function syncHistoryState() {
     setCanUndo(undoStackRef.current.length > 0);
     setCanRedo(redoStackRef.current.length > 0);
+  }
+
+  function updateShapeDraft(nextDraft: ShapeDraft | null) {
+    shapeDraftRef.current = nextDraft;
+    setShapeDraft(nextDraft);
   }
 
   function captureCanvasState() {
@@ -933,6 +975,122 @@ export function PatternMakerPage() {
     renderPatternPreviews();
   }
 
+  function constrainLineEnd(start: CanvasPoint, current: CanvasPoint) {
+    const deltaX = current.x - start.x;
+    const deltaY = current.y - start.y;
+    const angle = Math.atan2(deltaY, deltaX);
+    const snappedAngle = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
+    const distance = Math.hypot(deltaX, deltaY);
+
+    return {
+      x: start.x + Math.cos(snappedAngle) * distance,
+      y: start.y + Math.sin(snappedAngle) * distance,
+    };
+  }
+
+  function getShapeGeometry(draft: ShapeDraft) {
+    const start = draft.start;
+    const end = draft.constrain && shapeKind === "line"
+      ? constrainLineEnd(start, draft.current)
+      : draft.current;
+    let x = Math.min(start.x, end.x);
+    let y = Math.min(start.y, end.y);
+    let width = Math.abs(end.x - start.x);
+    let height = Math.abs(end.y - start.y);
+
+    if (shapeKind !== "line" && draft.constrain) {
+      const size = Math.max(width, height);
+      width = size;
+      height = size;
+      x = end.x < start.x ? start.x - size : start.x;
+      y = end.y < start.y ? start.y - size : start.y;
+    }
+
+    if (shapeKind !== "line" && draft.fromCenter) {
+      x = start.x - width;
+      y = start.y - height;
+      width *= 2;
+      height *= 2;
+    }
+
+    return {
+      end,
+      height,
+      start,
+      width,
+      x,
+      y,
+    };
+  }
+
+  function drawShapePath(
+    context: CanvasRenderingContext2D,
+    draft: ShapeDraft,
+    offsetX: number,
+    offsetY: number,
+  ) {
+    const shape = getShapeGeometry(draft);
+
+    context.beginPath();
+
+    if (shapeKind === "line") {
+      context.moveTo(shape.start.x + offsetX, shape.start.y + offsetY);
+      context.lineTo(shape.end.x + offsetX, shape.end.y + offsetY);
+      return;
+    }
+
+    if (shapeKind === "ellipse") {
+      context.ellipse(
+        shape.x + shape.width / 2 + offsetX,
+        shape.y + shape.height / 2 + offsetY,
+        Math.max(0.5, shape.width / 2),
+        Math.max(0.5, shape.height / 2),
+        0,
+        0,
+        Math.PI * 2,
+      );
+      return;
+    }
+
+    context.rect(shape.x + offsetX, shape.y + offsetY, shape.width, shape.height);
+  }
+
+  function commitShape(draft: ShapeDraft) {
+    const canvas = paintCanvasRef.current;
+    const context = canvas?.getContext("2d");
+
+    if (!canvas || !context) {
+      return;
+    }
+
+    disableCanvasSmoothing(context);
+    context.save();
+    context.globalAlpha = brushOpacity / 100;
+    context.globalCompositeOperation = shapeBlendMode === "erase" ? "destination-out" : "source-over";
+    context.fillStyle = selectedColor;
+    context.strokeStyle = selectedColor;
+    context.lineWidth = Math.max(1, brushSize);
+    context.lineCap = shapeKind === "line" ? "round" : "square";
+    context.lineJoin = "round";
+
+    for (const offsetX of [-tileSize, 0, tileSize]) {
+      for (const offsetY of [-tileSize, 0, tileSize]) {
+        drawShapePath(context, draft, offsetX, offsetY);
+
+        if (shapeKind !== "line" && (shapeMode === "fill" || shapeMode === "stroke-and-fill")) {
+          context.fill();
+        }
+
+        if (shapeKind === "line" || shapeMode === "stroke" || shapeMode === "stroke-and-fill") {
+          context.stroke();
+        }
+      }
+    }
+
+    context.restore();
+    renderPatternPreviews();
+  }
+
   function updateBrushPreview(event: PointerEvent<HTMLCanvasElement>) {
     setBrushPreviewPoint(getCanvasPoint(event, event.currentTarget));
 
@@ -971,6 +1129,20 @@ export function PatternMakerPage() {
       return;
     }
 
+    if (selectedTool === "shape") {
+      const point = getCanvasPoint(event, event.currentTarget);
+      const nextDraft = {
+        constrain: event.shiftKey,
+        current: point,
+        fromCenter: event.altKey,
+        start: point,
+      };
+
+      pushUndoState();
+      updateShapeDraft(nextDraft);
+      return;
+    }
+
     pushUndoState();
     const baseSnapshot = captureCanvasState();
     const strokeCanvas = document.createElement("canvas");
@@ -994,6 +1166,16 @@ export function PatternMakerPage() {
   function handlePointerMove(event: PointerEvent<HTMLCanvasElement>) {
     updateBrushPreview(event);
 
+    if (shapeDraftRef.current) {
+      updateShapeDraft({
+        ...shapeDraftRef.current,
+        constrain: event.shiftKey,
+        current: getCanvasPoint(event, event.currentTarget),
+        fromCenter: event.altKey,
+      });
+      return;
+    }
+
     if (isPaintingRef.current) {
       paintAt(event);
     }
@@ -1002,6 +1184,15 @@ export function PatternMakerPage() {
   function stopPainting(event: PointerEvent<HTMLCanvasElement>) {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    const activeShapeDraft = shapeDraftRef.current;
+
+    if (activeShapeDraft) {
+      commitShape(activeShapeDraft);
+      updateShapeDraft(null);
+      writePatternMakerDraft();
+      return;
     }
 
     isPaintingRef.current = false;
@@ -1214,6 +1405,7 @@ export function PatternMakerPage() {
         f: "fill",
         i: "eyedropper",
         p: "pencil",
+        s: "shape",
       }[event.key.toLowerCase()] as PatternTool | undefined;
 
       if (shortcutTool) {
@@ -1306,25 +1498,29 @@ export function PatternMakerPage() {
   const usesSoftBrushControls = selectedTool === "brush" || selectedTool === "eraser";
   const usesBrushShapeControl = selectedTool === "brush" || selectedTool === "eraser";
   const usesFillControls = selectedTool === "fill";
-  const usesPaletteControls = selectedTool !== "eraser";
+  const usesShapeControls = selectedTool === "shape";
+  const usesPaletteControls = selectedTool !== "eraser" &&
+    !(selectedTool === "shape" && shapeBlendMode === "erase");
   const implementControlLabel = selectedTool === "eraser" ? "Eraser" : "Brush";
   const activeCursorColor = selectedTool === "eyedropper"
     ? hoverSampleColor
-    : selectedTool === "eraser"
+    : selectedTool === "eraser" || (selectedTool === "shape" && shapeBlendMode === "erase")
       ? "#f7f5ef"
       : selectedColor;
   const cursorIconPath = selectedTool === "eyedropper"
     ? mdiEyedropper
     : selectedTool === "fill"
       ? mdiFormatColorFill
-      : null;
+      : selectedTool === "shape"
+        ? mdiVectorSquare
+        : null;
   const implementDemoStyle: ImplementDemoStyle = {
     "--implement-demo-color": activeCursorColor,
     "--implement-demo-hardness": selectedTool === "pencil" ? "100%" : `${brushHardness}%`,
     "--implement-demo-opacity": selectedTool === "pencil" ? 1 : brushOpacity / 100,
     "--implement-demo-size": `${Math.max(8, brushSize)}px`,
   };
-  const brushCursorStyle: BrushCursorStyle | undefined = brushPreviewPoint
+  const brushCursorStyle: BrushCursorStyle | undefined = brushPreviewPoint && selectedTool !== "shape"
     ? {
         "--brush-cursor-color": activeCursorColor,
         "--brush-cursor-size": `${(brushSize / tileSize) * 100}%`,
@@ -1332,6 +1528,7 @@ export function PatternMakerPage() {
         "--brush-cursor-y": `${(brushPreviewPoint.y / tileSize) * 100}%`,
       }
     : undefined;
+  const shapePreview = shapeDraft ? getShapeGeometry(shapeDraft) : null;
 
   return (
     <div className={styles.workspace}>
@@ -1396,6 +1593,14 @@ export function PatternMakerPage() {
                 <MdiIcon path={mdiFormatColorFill} />
                 Fill
               </button>
+              <button
+                type="button"
+                aria-pressed={selectedTool === "shape"}
+                onClick={() => setSelectedTool("shape")}
+              >
+                <MdiIcon path={mdiVectorSquare} />
+                Shape
+              </button>
             </div>
 
             <div className={styles.panelBlock}>
@@ -1412,7 +1617,9 @@ export function PatternMakerPage() {
                       ? `${brushSize}px ${activeBrushShape}${usesSoftBrushControls ? ` / ${brushFlow}% flow` : ""}`
                       : selectedTool === "fill"
                         ? `${fillMode} fill / tolerance ${fillTolerance}`
-                        : "sample exact pixel colour"}
+                        : selectedTool === "shape"
+                          ? `${shapeBlendMode} ${shapeMode} ${shapeKind}`
+                          : "sample exact pixel colour"}
                   </span>
                 </span>
                 <span
@@ -1577,6 +1784,105 @@ export function PatternMakerPage() {
                     max="64"
                     value={fillTolerance}
                     onChange={(event) => setFillTolerance(Number(event.target.value))}
+                  />
+                </label>
+              </div>
+            ) : null}
+
+            {usesShapeControls ? (
+              <div className={styles.panelBlock}>
+                <span className={styles.panelSubheading}>Shape Settings</span>
+                <div className={styles.shapeControl} aria-label="Shape kind">
+                  <button
+                    type="button"
+                    aria-pressed={shapeKind === "line"}
+                    onClick={() => setShapeKind("line")}
+                  >
+                    <MdiIcon path={mdiVectorLine} />
+                    Line
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={shapeKind === "rectangle"}
+                    onClick={() => setShapeKind("rectangle")}
+                  >
+                    <MdiIcon path={mdiVectorSquare} />
+                    Rectangle
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={shapeKind === "ellipse"}
+                    onClick={() => setShapeKind("ellipse")}
+                  >
+                    <MdiIcon path={mdiShapeCirclePlus} />
+                    Ellipse
+                  </button>
+                </div>
+                <div className={styles.shapeControl} aria-label="Shape mode">
+                  <button
+                    type="button"
+                    aria-pressed={shapeMode === "stroke"}
+                    onClick={() => setShapeMode("stroke")}
+                  >
+                    Stroke
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={shapeMode === "fill"}
+                    onClick={() => setShapeMode("fill")}
+                  >
+                    Fill
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={shapeMode === "stroke-and-fill"}
+                    onClick={() => setShapeMode("stroke-and-fill")}
+                  >
+                    Both
+                  </button>
+                </div>
+                <div className={styles.shapeControl} aria-label="Shape blend">
+                  <button
+                    type="button"
+                    aria-pressed={shapeBlendMode === "paint"}
+                    onClick={() => setShapeBlendMode("paint")}
+                  >
+                    Paint
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={shapeBlendMode === "erase"}
+                    onClick={() => setShapeBlendMode("erase")}
+                  >
+                    Erase
+                  </button>
+                </div>
+                <label className={styles.rangeField}>
+                  <span className={styles.rangeLabel}>
+                    <span>Stroke width</span>
+                    <output>{brushSize}px</output>
+                  </span>
+                  <input
+                    type="range"
+                    aria-label="Shape stroke width"
+                    min="1"
+                    max="96"
+                    value={brushSize}
+                    onChange={(event) => setBrushSize(Number(event.target.value))}
+                  />
+                </label>
+                <label className={styles.rangeField}>
+                  <span className={styles.rangeLabel}>
+                    <span>Opacity</span>
+                    <output>{brushOpacity}%</output>
+                  </span>
+                  <input
+                    type="range"
+                    aria-label="Shape opacity"
+                    min="10"
+                    max="100"
+                    value={brushOpacity}
+                    onChange={(event) => setBrushOpacity(Number(event.target.value))}
                   />
                 </label>
               </div>
@@ -1770,6 +2076,47 @@ export function PatternMakerPage() {
               {showGrid ? <div className={styles.gridOverlay} aria-hidden="true" /> : null}
               {showTileBoundary ? (
                 <div className={styles.tileBoundaryOverlay} aria-hidden="true" />
+              ) : null}
+              {shapePreview ? (
+                <svg
+                  className={classNames(styles.shapePreview, {
+                    [styles.eraseShapePreview]: shapeBlendMode === "erase",
+                  })}
+                  style={{ color: shapeBlendMode === "erase" ? "#e63946" : selectedColor }}
+                  viewBox={`0 0 ${tileSize} ${tileSize}`}
+                  aria-hidden="true"
+                >
+                  {shapeKind === "line" ? (
+                    <line
+                      x1={shapePreview.start.x}
+                      y1={shapePreview.start.y}
+                      x2={shapePreview.end.x}
+                      y2={shapePreview.end.y}
+                      stroke="currentColor"
+                      strokeWidth={Math.max(1, brushSize)}
+                    />
+                  ) : shapeKind === "ellipse" ? (
+                    <ellipse
+                      cx={shapePreview.x + shapePreview.width / 2}
+                      cy={shapePreview.y + shapePreview.height / 2}
+                      rx={Math.max(0.5, shapePreview.width / 2)}
+                      ry={Math.max(0.5, shapePreview.height / 2)}
+                      fill={shapeMode === "stroke" ? "none" : "currentColor"}
+                      stroke={shapeMode === "fill" ? "none" : "currentColor"}
+                      strokeWidth={Math.max(1, brushSize)}
+                    />
+                  ) : (
+                    <rect
+                      x={shapePreview.x}
+                      y={shapePreview.y}
+                      width={shapePreview.width}
+                      height={shapePreview.height}
+                      fill={shapeMode === "stroke" ? "none" : "currentColor"}
+                      stroke={shapeMode === "fill" ? "none" : "currentColor"}
+                      strokeWidth={Math.max(1, brushSize)}
+                    />
+                  )}
+                </svg>
               ) : null}
               {brushCursorStyle ? (
                 <div

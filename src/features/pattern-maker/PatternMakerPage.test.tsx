@@ -14,6 +14,7 @@ function createCanvasContextMock() {
     createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
     createPattern: vi.fn(() => ({})),
     drawImage: vi.fn(),
+    ellipse: vi.fn(),
     fill: vi.fn(),
     fillRect: vi.fn(),
     getImageData: vi.fn((...args: number[]) => {
@@ -29,6 +30,9 @@ function createCanvasContextMock() {
     lineTo: vi.fn(),
     moveTo: vi.fn(),
     putImageData: vi.fn(),
+    rect: vi.fn(),
+    restore: vi.fn(),
+    save: vi.fn(),
     stroke: vi.fn(),
     set fillStyle(_value: unknown) {},
     set globalCompositeOperation(value: unknown) {
@@ -187,6 +191,75 @@ describe("PatternMakerPage", () => {
 
     expect(context.setGlobalCompositeOperation).toHaveBeenCalledWith("destination-out");
     expect(context.setGlobalCompositeOperation).toHaveBeenCalledWith("source-over");
+  });
+
+  it("supports shape drawing with paint and erase modes", async () => {
+    const user = userEvent.setup();
+    renderPatternMakerPage();
+
+    await user.click(screen.getByRole("button", { name: "Shape" }));
+
+    expect(screen.getByRole("button", { name: "Rectangle" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByRole("slider", { name: "Shape stroke width" })).toHaveValue("36");
+
+    const canvas = screen.getByLabelText("Pattern painting tile") as HTMLCanvasElement;
+    vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue({
+      bottom: 512,
+      height: 512,
+      left: 0,
+      right: 512,
+      toJSON: () => undefined,
+      top: 0,
+      width: 512,
+      x: 0,
+      y: 0,
+    });
+    canvas.setPointerCapture = vi.fn();
+    canvas.releasePointerCapture = vi.fn();
+    canvas.hasPointerCapture = vi.fn(() => true);
+
+    fireEvent.pointerDown(canvas, {
+      clientX: 80,
+      clientY: 96,
+      pointerId: 1,
+      pointerType: "mouse",
+    });
+    fireEvent.pointerMove(canvas, {
+      clientX: 220,
+      clientY: 256,
+      pointerId: 1,
+      pointerType: "mouse",
+    });
+    fireEvent.pointerUp(canvas, {
+      pointerId: 1,
+      pointerType: "mouse",
+    });
+
+    expect(context.rect).toHaveBeenCalled();
+    expect(context.stroke).toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Erase" }));
+    fireEvent.pointerDown(canvas, {
+      clientX: 120,
+      clientY: 120,
+      pointerId: 2,
+      pointerType: "mouse",
+    });
+    fireEvent.pointerMove(canvas, {
+      clientX: 240,
+      clientY: 240,
+      pointerId: 2,
+      pointerType: "mouse",
+    });
+    fireEvent.pointerUp(canvas, {
+      pointerId: 2,
+      pointerType: "mouse",
+    });
+
+    expect(context.setGlobalCompositeOperation).toHaveBeenCalledWith("destination-out");
   });
 
   it("supports display toggles and history controls", async () => {
