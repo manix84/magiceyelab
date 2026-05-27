@@ -1306,6 +1306,7 @@ export function PatternMakerPage() {
   const usesSoftBrushControls = selectedTool === "brush" || selectedTool === "eraser";
   const usesBrushShapeControl = selectedTool === "brush" || selectedTool === "eraser";
   const usesFillControls = selectedTool === "fill";
+  const usesPaletteControls = selectedTool !== "eraser";
   const implementControlLabel = selectedTool === "eraser" ? "Eraser" : "Brush";
   const activeCursorColor = selectedTool === "eyedropper"
     ? hoverSampleColor
@@ -1601,61 +1602,63 @@ export function PatternMakerPage() {
             </label>
           </FieldGroup>
 
-          <FieldGroup title="Palette">
-            <label className={styles.colorField}>
-              <span>Colour</span>
-              <span className={styles.colorInputGroup}>
-                <span
-                  className={styles.currentColor}
-                  style={{ backgroundColor: selectedColor }}
-                  aria-hidden="true"
-                />
-                <input
-                  type="text"
-                  aria-label="Current colour hex"
-                  value={colorInputValue}
-                  onChange={(event) => {
-                    setColorInputValue(event.target.value);
+          {usesPaletteControls ? (
+            <FieldGroup title="Palette">
+              <label className={styles.colorField}>
+                <span>Colour</span>
+                <span className={styles.colorInputGroup}>
+                  <span
+                    className={styles.currentColor}
+                    style={{ backgroundColor: selectedColor }}
+                    aria-hidden="true"
+                  />
+                  <input
+                    type="text"
+                    aria-label="Current colour hex"
+                    value={colorInputValue}
+                    onChange={(event) => {
+                      setColorInputValue(event.target.value);
 
-                    if (normaliseHexColor(event.target.value)) {
-                      selectColor(event.target.value);
-                    }
-                  }}
-                  onBlur={() => setColorInputValue(selectedColor)}
-                />
-              </span>
-            </label>
-            <div className={styles.paletteRow}>
-              {palette.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  aria-label={`Select ${color}`}
-                  aria-pressed={selectedColor === color}
-                  onClick={() => selectColor(color)}
-                  style={{ backgroundColor: color }}
-                />
-              ))}
-            </div>
-            {recentColors.length > 0 ? (
-              <div className={styles.paletteRow} aria-label="Recent colours">
-                {recentColors.map((color) => (
+                      if (normaliseHexColor(event.target.value)) {
+                        selectColor(event.target.value);
+                      }
+                    }}
+                    onBlur={() => setColorInputValue(selectedColor)}
+                  />
+                </span>
+              </label>
+              <div className={styles.paletteRow}>
+                {palette.map((color) => (
                   <button
                     key={color}
                     type="button"
-                    aria-label={`Select recent ${color}`}
+                    aria-label={`Select ${color}`}
                     aria-pressed={selectedColor === color}
                     onClick={() => selectColor(color)}
                     style={{ backgroundColor: color }}
                   />
                 ))}
               </div>
-            ) : null}
-            <button type="button">
-              <MdiIcon path={mdiPalette} />
-              Edit palette
-            </button>
-          </FieldGroup>
+              {recentColors.length > 0 ? (
+                <div className={styles.paletteRow} aria-label="Recent colours">
+                  {recentColors.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      aria-label={`Select recent ${color}`}
+                      aria-pressed={selectedColor === color}
+                      onClick={() => selectColor(color)}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              ) : null}
+              <button type="button">
+                <MdiIcon path={mdiPalette} />
+                Edit palette
+              </button>
+            </FieldGroup>
+          ) : null}
 
           <button className={styles.primaryAction} type="button" onClick={handleRandomPattern}>
             <MdiIcon path={mdiDiceMultiple} />

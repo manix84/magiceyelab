@@ -156,6 +156,7 @@ describe("PatternMakerPage", () => {
 
     expect(screen.getByRole("slider", { name: "Eraser size" })).toHaveValue("36");
     expect(screen.getByRole("slider", { name: "Eraser opacity" })).toHaveValue("100");
+    expect(screen.queryByLabelText("Current colour hex")).not.toBeInTheDocument();
 
     const canvas = screen.getByLabelText("Pattern painting tile") as HTMLCanvasElement;
     vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue({
