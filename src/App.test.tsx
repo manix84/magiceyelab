@@ -57,6 +57,35 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
+  it("restores stored generator controls", () => {
+    window.localStorage.setItem(
+      "magiceyelab:generator",
+      JSON.stringify({
+        version: 1,
+        exportName: "stored-export.png",
+        depthStrength: 72,
+        repeatWidth: 156,
+        showDepthOverlay: true,
+        depthFileName: "",
+        depthInferenceMessage: "",
+        depthImageDataUrl: "",
+        patternFileName: "",
+        patternImageDataUrl: "",
+      }),
+    );
+
+    render(
+      <MemoryRouter initialEntries={["/generator"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByLabelText("Export name")).toHaveValue("stored-export.png");
+    expect(screen.getByDisplayValue("72")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("156")).toBeInTheDocument();
+    expect(screen.getByLabelText("Show depth overlay")).toBeChecked();
+  });
+
   it("renders the not found page for unknown routes", () => {
     render(
       <MemoryRouter initialEntries={["/missing-route"]}>
