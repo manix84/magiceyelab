@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import classNames from "classnames";
 import {
   mdiBrightnessAuto,
@@ -50,7 +50,11 @@ function storeThemeMode(themeMode: ThemeMode) {
   }
 }
 
-export function AppLayout() {
+type AppLayoutProps = {
+  children?: ReactNode;
+};
+
+export function AppLayout({ children }: AppLayoutProps) {
   const [hasScrolled, setHasScrolled] = useState(false);
   const [themeMode, setThemeMode] = useState<ThemeMode>(getStoredThemeMode);
 
@@ -118,9 +122,7 @@ export function AppLayout() {
         </div>
       </header>
 
-      <main className={styles.main}>
-        <Outlet />
-      </main>
+      <main className={styles.main}>{children ?? <Outlet />}</main>
     </div>
   );
 }

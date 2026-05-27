@@ -52,6 +52,28 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders the not found page for unknown routes", () => {
+    render(
+      <MemoryRouter initialEntries={["/missing-route"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("heading", { name: "Image not found" })).toBeInTheDocument();
+  });
+
+  it("renders the server error page route", () => {
+    render(
+      <MemoryRouter initialEntries={["/500"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Render interrupted" }),
+    ).toBeInTheDocument();
+  });
+
   it("defaults theme mode to auto and can switch to explicit themes", async () => {
     const user = userEvent.setup();
 
