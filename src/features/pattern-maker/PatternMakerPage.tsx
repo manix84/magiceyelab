@@ -826,6 +826,15 @@ export function PatternMakerPage() {
 
       <div className={styles.workspaceGrid}>
         <aside className={styles.toolPanel} aria-label="Pattern maker controls">
+          <div className={styles.iconRow} aria-label="Pattern history">
+            <button type="button" aria-label="Undo" disabled={!canUndo} onClick={handleUndo}>
+              <MdiIcon path={mdiUndo} />
+            </button>
+            <button type="button" aria-label="Redo" disabled={!canRedo} onClick={handleRedo}>
+              <MdiIcon path={mdiRedo} />
+            </button>
+          </div>
+
           <FieldGroup title="Tools">
             <div className={styles.segmentedControl} aria-label="Pattern tool">
               <button
@@ -989,15 +998,6 @@ export function PatternMakerPage() {
               </button>
             </div>
           </FieldGroup>
-
-          <div className={styles.iconRow} aria-label="Pattern history">
-            <button type="button" aria-label="Undo" disabled={!canUndo} onClick={handleUndo}>
-              <MdiIcon path={mdiUndo} />
-            </button>
-            <button type="button" aria-label="Redo" disabled={!canRedo} onClick={handleRedo}>
-              <MdiIcon path={mdiRedo} />
-            </button>
-          </div>
 
           <FieldGroup title="Generator">
             <div className={styles.actionStack}>
