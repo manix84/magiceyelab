@@ -13,6 +13,7 @@ import {
   mdiTextureBox,
 } from "@mdi/js";
 import { FieldGroup } from "../../components/controls/FieldGroup";
+import { RangeField } from "../../components/controls/RangeField";
 import { ToggleField } from "../../components/controls/ToggleField";
 import { MdiIcon } from "../../components/icons/MdiIcon";
 import { PageHeader } from "../../components/layout/PageHeader";
@@ -760,32 +761,22 @@ export function GeneratorPage() {
           </FieldGroup>
 
           <FieldGroup title="Render">
-            <label className={styles.rangeField}>
-              <span className={styles.rangeLabel}>
-                <span>Depth strength</span>
-                <output>{depthStrength}%</output>
-              </span>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={depthStrength}
-                onChange={(event) => setDepthStrength(Number(event.target.value))}
-              />
-            </label>
-            <label className={styles.rangeField}>
-              <span className={styles.rangeLabel}>
-                <span>Repeat width</span>
-                <output>{repeatWidth}px</output>
-              </span>
-              <input
-                type="range"
-                min="48"
-                max="240"
-                value={repeatWidth}
-                onChange={(event) => setRepeatWidth(Number(event.target.value))}
-              />
-            </label>
+            <RangeField
+              label="Depth strength"
+              min={0}
+              max={100}
+              value={depthStrength}
+              valueLabel={`${depthStrength}%`}
+              onChange={setDepthStrength}
+            />
+            <RangeField
+              label="Repeat width"
+              min={48}
+              max={240}
+              value={repeatWidth}
+              valueLabel={`${repeatWidth}px`}
+              onChange={setRepeatWidth}
+            />
             <ToggleField
               checked={showDepthOverlay}
               iconPath={mdiLayersTripleOutline}

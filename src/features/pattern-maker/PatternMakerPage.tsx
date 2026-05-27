@@ -32,6 +32,8 @@ import {
 } from "@mdi/js";
 import { useNavigate } from "react-router-dom";
 import { FieldGroup } from "../../components/controls/FieldGroup";
+import { PanelSection } from "../../components/controls/PanelSection";
+import { RangeField } from "../../components/controls/RangeField";
 import { ToggleField } from "../../components/controls/ToggleField";
 import { MdiIcon } from "../../components/icons/MdiIcon";
 import { PageHeader } from "../../components/layout/PageHeader";
@@ -1862,8 +1864,7 @@ export function PatternMakerPage() {
               </button>
             </div>
 
-            <div className={styles.panelBlock}>
-              <span className={styles.panelSubheading}>Preview</span>
+            <PanelSection title="Preview">
               <div
                 className={styles.implementDemo}
                 aria-label={`${selectedTool} implement preview`}
@@ -1906,90 +1907,68 @@ export function PatternMakerPage() {
                   ) : null}
                 </span>
               </div>
-            </div>
+            </PanelSection>
 
             {usesBrushStamp ? (
-              <div className={styles.panelBlock}>
-                <span className={styles.panelSubheading}>
-                  {selectedTool === "pencil" ? "Pencil Settings" : `${implementControlLabel} Settings`}
-                </span>
+              <PanelSection
+                title={
+                  selectedTool === "pencil"
+                    ? "Pencil Settings"
+                    : `${implementControlLabel} Settings`
+                }
+              >
                 {primarySecondaryColorControls}
-                <label className={styles.rangeField}>
-                  <span className={styles.rangeLabel}>
-                    <span>Size</span>
-                    <output>{brushSize}px</output>
-                  </span>
-                  <input
-                    type="range"
-                    aria-label={
-                      selectedTool === "pencil"
-                        ? "Pencil size"
-                        : `${implementControlLabel} size`
-                    }
-                    min="1"
-                    max="96"
-                    value={brushSize}
-                    onChange={(event) => setBrushSize(Number(event.target.value))}
-                  />
-                </label>
+                <RangeField
+                  label="Size"
+                  ariaLabel={
+                    selectedTool === "pencil"
+                      ? "Pencil size"
+                      : `${implementControlLabel} size`
+                  }
+                  min={1}
+                  max={96}
+                  value={brushSize}
+                  valueLabel={`${brushSize}px`}
+                  onChange={setBrushSize}
+                />
                 {usesSoftBrushControls ? (
                   <>
-                    <label className={styles.rangeField}>
-                      <span className={styles.rangeLabel}>
-                        <span>Opacity</span>
-                        <output>{brushOpacity}%</output>
-                      </span>
-                      <input
-                        type="range"
-                        aria-label={`${implementControlLabel} opacity`}
-                        min="10"
-                        max="100"
-                        value={brushOpacity}
-                        onChange={(event) => setBrushOpacity(Number(event.target.value))}
-                      />
-                    </label>
-                    <label className={styles.rangeField}>
-                      <span className={styles.rangeLabel}>
-                        <span>Flow</span>
-                        <output>{brushFlow}%</output>
-                      </span>
-                      <input
-                        type="range"
-                        aria-label={`${implementControlLabel} flow`}
-                        min="1"
-                        max="100"
-                        value={brushFlow}
-                        onChange={(event) => setBrushFlow(Number(event.target.value))}
-                      />
-                    </label>
-                    <label className={styles.rangeField}>
-                      <span className={styles.rangeLabel}>
-                        <span>Hardness</span>
-                        <output>{brushHardness}%</output>
-                      </span>
-                      <input
-                        type="range"
-                        aria-label={`${implementControlLabel} hardness`}
-                        min="0"
-                        max="100"
-                        value={brushHardness}
-                        onChange={(event) => setBrushHardness(Number(event.target.value))}
-                      />
-                    </label>
-                    <label className={styles.rangeField}>
-                      <span className={styles.rangeLabel}>
-                        <span>Spacing</span>
-                        <output>{brushSpacing}%</output>
-                      </span>
-                      <input
-                        type="range"
-                        aria-label={`${implementControlLabel} spacing`}
-                        min="5"
-                        max="100"
-                        value={brushSpacing}
-                        onChange={(event) => setBrushSpacing(Number(event.target.value))}
-                      />
-                    </label>
+                    <RangeField
+                      label="Opacity"
+                      ariaLabel={`${implementControlLabel} opacity`}
+                      min={10}
+                      max={100}
+                      value={brushOpacity}
+                      valueLabel={`${brushOpacity}%`}
+                      onChange={setBrushOpacity}
+                    />
+                    <RangeField
+                      label="Flow"
+                      ariaLabel={`${implementControlLabel} flow`}
+                      min={1}
+                      max={100}
+                      value={brushFlow}
+                      valueLabel={`${brushFlow}%`}
+                      onChange={setBrushFlow}
+                    />
+                    <RangeField
+                      label="Hardness"
+                      ariaLabel={`${implementControlLabel} hardness`}
+                      min={0}
+                      max={100}
+                      value={brushHardness}
+                      valueLabel={`${brushHardness}%`}
+                      onChange={setBrushHardness}
+                    />
+                    <RangeField
+                      label="Spacing"
+                      ariaLabel={`${implementControlLabel} spacing`}
+                      min={5}
+                      max={100}
+                      value={brushSpacing}
+                      valueLabel={`${brushSpacing}%`}
+                      onChange={setBrushSpacing}
+                    />
                   </>
                 ) : null}
                 {usesBrushShapeControl ? (
@@ -2044,12 +2023,11 @@ export function PatternMakerPage() {
                     </button>
                   </div>
                 ) : null}
-              </div>
+              </PanelSection>
             ) : null}
 
             {usesFillControls ? (
-              <div className={styles.panelBlock}>
-                <span className={styles.panelSubheading}>Fill Settings</span>
+              <PanelSection title="Fill Settings">
                 {primarySecondaryColorControls}
                 <div className={styles.shapeControl} aria-label="Fill mode">
                   <button
@@ -2069,26 +2047,19 @@ export function PatternMakerPage() {
                     Global
                   </button>
                 </div>
-                <label className={styles.rangeField}>
-                  <span className={styles.rangeLabel}>
-                    <span>Fill tolerance</span>
-                    <output>{fillTolerance}</output>
-                  </span>
-                  <input
-                    type="range"
-                    aria-label="Fill tolerance"
-                    min="0"
-                    max="64"
-                    value={fillTolerance}
-                    onChange={(event) => setFillTolerance(Number(event.target.value))}
-                  />
-                </label>
-              </div>
+                <RangeField
+                  label="Fill tolerance"
+                  min={0}
+                  max={64}
+                  value={fillTolerance}
+                  valueLabel={fillTolerance}
+                  onChange={setFillTolerance}
+                />
+              </PanelSection>
             ) : null}
 
             {usesShapeControls ? (
-              <div className={styles.panelBlock}>
-                <span className={styles.panelSubheading}>Shape Settings</span>
+              <PanelSection title="Shape Settings">
                 <div className={styles.shapeControl} aria-label="Shape kind">
                   <button
                     type="button"
@@ -2155,48 +2126,37 @@ export function PatternMakerPage() {
                   </button>
                 </div>
                 {primarySecondaryColorControls}
-                <label className={styles.rangeField}>
-                  <span className={styles.rangeLabel}>
-                    <span>Stroke width</span>
-                    <output>{brushSize}px</output>
-                  </span>
-                  <input
-                    type="range"
-                    aria-label="Shape stroke width"
-                    min="1"
-                    max="96"
-                    value={brushSize}
-                    onChange={(event) => setBrushSize(Number(event.target.value))}
-                  />
-                </label>
-                <label className={styles.rangeField}>
-                  <span className={styles.rangeLabel}>
-                    <span>Opacity</span>
-                    <output>{brushOpacity}%</output>
-                  </span>
-                  <input
-                    type="range"
-                    aria-label="Shape opacity"
-                    min="10"
-                    max="100"
-                    value={brushOpacity}
-                    onChange={(event) => setBrushOpacity(Number(event.target.value))}
-                  />
-                </label>
-              </div>
+                <RangeField
+                  label="Stroke width"
+                  ariaLabel="Shape stroke width"
+                  min={1}
+                  max={96}
+                  value={brushSize}
+                  valueLabel={`${brushSize}px`}
+                  onChange={setBrushSize}
+                />
+                <RangeField
+                  label="Opacity"
+                  ariaLabel="Shape opacity"
+                  min={10}
+                  max={100}
+                  value={brushOpacity}
+                  valueLabel={`${brushOpacity}%`}
+                  onChange={setBrushOpacity}
+                />
+              </PanelSection>
             ) : null}
 
             {selectedTool === "eyedropper" ? (
-              <div className={styles.panelBlock}>
+              <PanelSection>
                 <p className={styles.transferMessage}>Click the tile to sample a colour.</p>
-              </div>
+              </PanelSection>
             ) : null}
           </FieldGroup>
 
           <FieldGroup title="Colour & View">
             {usesPaletteControls ? (
-              <div className={styles.panelBlock}>
-                <span className={styles.panelSubheading}>Palette</span>
+              <PanelSection title="Palette">
                 <div className={styles.paletteRow}>
                   {paletteColors.map((color) => (
                     <span className={styles.paletteSwatch} key={color}>
@@ -2259,11 +2219,10 @@ export function PatternMakerPage() {
                   <MdiIcon path={mdiPalette} />
                   {isPaletteEditing ? "Done editing" : "Edit palette"}
                 </button>
-              </div>
+              </PanelSection>
             ) : null}
 
-            <div className={styles.panelBlock}>
-              <span className={styles.panelSubheading}>View</span>
+            <PanelSection title="View">
               <ToggleField
                 checked={showGrid}
                 iconPath={mdiGrid}
@@ -2276,12 +2235,11 @@ export function PatternMakerPage() {
                 label="Show boundary"
                 onChange={setShowTileBoundary}
               />
-            </div>
+            </PanelSection>
           </FieldGroup>
 
           <FieldGroup title="Pattern">
-            <div className={styles.panelBlock}>
-              <span className={styles.panelSubheading}>Tile Actions</span>
+            <PanelSection title="Tile Actions">
               <div className={styles.actionStack}>
                 <button type="button" onClick={handleRandomPattern}>
                   <MdiIcon path={mdiDiceMultiple} />
@@ -2307,10 +2265,9 @@ export function PatternMakerPage() {
                   Clear tile
                 </button>
               </div>
-            </div>
+            </PanelSection>
 
-            <div className={styles.panelBlock}>
-              <span className={styles.panelSubheading}>Generator</span>
+            <PanelSection title="Generator">
               <div className={styles.actionStack}>
                 <button type="button" onClick={handleLoadGeneratorPattern}>
                   <MdiIcon path={mdiImageEdit} />
@@ -2324,7 +2281,7 @@ export function PatternMakerPage() {
               {transferMessage ? (
                 <p className={styles.transferMessage}>{transferMessage}</p>
               ) : null}
-            </div>
+            </PanelSection>
           </FieldGroup>
 
         </aside>

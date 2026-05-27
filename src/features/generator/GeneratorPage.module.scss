@@ -209,29 +209,6 @@ label.dropZone {
   font-weight: 700;
 }
 
-.rangeField {
-  min-width: 0;
-
-  input {
-    min-width: 0;
-  }
-}
-
-.rangeLabel {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-
-  output {
-    min-width: 3.5rem;
-    color: var(--color-accent);
-    font-variant-numeric: tabular-nums;
-    font-weight: 700;
-    text-align: right;
-  }
-}
-
 .primaryAction {
   @include mixins.primary-action;
 }
