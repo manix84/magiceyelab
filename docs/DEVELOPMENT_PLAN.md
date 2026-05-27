@@ -99,17 +99,23 @@ Allow users to create a seamless repeating pattern directly in the browser.
 - Pixel-style brush
 - Hard-edged pencil tool
 - Eraser
+- Eyedropper
 - Colour picker
 - Palette support
 - Adjustable brush size
+- Adjustable brush opacity
+- Circle/square brush shape controls
 - Brush/pencil size and shape preview
 - Optional grid overlay
+- Optional tile boundary guide
 - Stroke-based undo / redo
+- Keyboard shortcuts for pencil, brush, eraser, eyedropper, undo, and redo
 - Seamless tile preview with opposite-edge strips around the active painting tile
 - Wraparound painting across tile boundaries and corners
 - Repeated pattern preview that shows several tiled copies at once
 - Import pattern image
 - Export pattern image
+- Clear pattern tile
 - Send created patterns to the Generator and edit the Generator's current pattern
 - Random pattern generator that creates wrapped motifs so generated tiles repeat cleanly
 
@@ -231,13 +237,18 @@ Users can paint their own hidden image and generate a stereogram from it.
 - Add colour picker
 - Add palette
 - Add pencil, brush, and eraser tools
+- Add eyedropper colour picking
 - Add brush size controls
+- Add brush opacity and shape controls
 - Add brush/pencil size preview on controls and canvas
 - Add optional grid overlay
+- Add optional tile boundary guide
 - Add undo / redo
+- Add keyboard shortcuts for core tools
 - Add seamless tile preview with live opposite-edge references
 - Add wraparound painting for strokes that cross tile boundaries
 - Add random pattern generator that draws wrapped seamless shapes
+- Add pattern image import, PNG export, and clear tile controls
 - Add Pattern Maker / Generator handoff
 - Add export pattern
 - Connect created pattern to generator

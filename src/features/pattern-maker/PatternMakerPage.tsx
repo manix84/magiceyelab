@@ -1,4 +1,5 @@
 import {
+  type ChangeEvent,
   type CSSProperties,
   type PointerEvent,
   useEffect,
@@ -9,14 +10,21 @@ import classNames from "classnames";
 import {
   mdiBrush,
   mdiDiceMultiple,
+  mdiDownload,
   mdiEraser,
+  mdiEyedropper,
   mdiGrid,
   mdiImageEdit,
   mdiPalette,
   mdiPencil,
   mdiRedo,
   mdiSend,
+  mdiShapeCirclePlus,
+  mdiShapeSquarePlus,
+  mdiTrashCanOutline,
   mdiUndo,
+  mdiUpload,
+  mdiVectorSquare,
 } from "@mdi/js";
 import { useNavigate } from "react-router-dom";
 import { FieldGroup } from "../../components/controls/FieldGroup";
@@ -31,7 +39,9 @@ const seamSize = 56;
 const repeatPreviewTileSize = 160;
 const defaultBrushSize = 36;
 const maxHistoryStates = 24;
-type PatternTool = "pencil" | "brush" | "eraser";
+const acceptedPatternTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+type PatternTool = "pencil" | "brush" | "eraser" | "eyedropper";
+type BrushShape = "circle" | "square";
 type CanvasPoint = {
   x: number;
   y: number;
@@ -188,6 +198,31 @@ function loadImageSource(source: string): Promise<HTMLImageElement> {
   });
 }
 
+function loadImageFile(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result !== "string") {
+        reject(new Error("Could not read pattern file."));
+        return;
+      }
+
+      void loadImageSource(reader.result).then(resolve).catch(reject);
+    };
+    reader.onerror = () => reject(new Error("Could not read pattern file."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function formatColorComponent(value: number) {
+  return value.toString(16).padStart(2, "0");
+}
+
+function rgbToHex(red: number, green: number, blue: number) {
+  return `#${formatColorComponent(red)}${formatColorComponent(green)}${formatColorComponent(blue)}`;
+}
+
 function writeStoredGeneratorPattern(patternImageDataUrl: string) {
   const storedGeneratorState = readStoredGeneratorState();
   const nextGeneratorState: StoredGeneratorState = {
@@ -206,8 +241,11 @@ export function PatternMakerPage() {
   const navigate = useNavigate();
   const [selectedTool, setSelectedTool] = useState<PatternTool>("brush");
   const [selectedColor, setSelectedColor] = useState(palette[0]);
+  const [brushShape, setBrushShape] = useState<BrushShape>("circle");
   const [brushSize, setBrushSize] = useState(defaultBrushSize);
+  const [brushOpacity, setBrushOpacity] = useState(100);
   const [showGrid, setShowGrid] = useState(true);
+  const [showTileBoundary, setShowTileBoundary] = useState(true);
   const [transferMessage, setTransferMessage] = useState("");
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
@@ -222,6 +260,7 @@ export function PatternMakerPage() {
   const lastPointRef = useRef<CanvasPoint | null>(null);
   const undoStackRef = useRef<ImageData[]>([]);
   const redoStackRef = useRef<ImageData[]>([]);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   function syncHistoryState() {
     setCanUndo(undoStackRef.current.length > 0);
@@ -361,15 +400,45 @@ export function PatternMakerPage() {
     }
   }
 
-  function paintStamp(context: CanvasRenderingContext2D, point: CanvasPoint) {
-    context.fillStyle = selectedTool === "eraser" ? "#f7f5ef" : selectedColor;
+  function clearTile(pushHistory = true) {
+    const canvas = paintCanvasRef.current;
+    const context = canvas?.getContext("2d");
 
-    if (selectedTool === "pencil") {
-      drawWrappedSquare(context, point.x, point.y, brushSize);
+    if (!canvas || !context) {
       return;
     }
 
-    drawWrappedCircle(context, point.x, point.y, brushSize / 2);
+    if (pushHistory) {
+      pushUndoState();
+    }
+
+    context.fillStyle = "#f7f5ef";
+    context.fillRect(0, 0, tileSize, tileSize);
+    renderPatternPreviews();
+  }
+
+  function getActiveBrushShape() {
+    if (selectedTool === "pencil") {
+      return "square";
+    }
+
+    return brushShape;
+  }
+
+  function paintStamp(context: CanvasRenderingContext2D, point: CanvasPoint) {
+    context.fillStyle = selectedTool === "eraser" ? "#f7f5ef" : selectedColor;
+    context.globalAlpha = selectedTool === "pencil" ? 1 : brushOpacity / 100;
+
+    try {
+      if (getActiveBrushShape() === "square") {
+        drawWrappedSquare(context, point.x, point.y, brushSize);
+        return;
+      }
+
+      drawWrappedCircle(context, point.x, point.y, brushSize / 2);
+    } finally {
+      context.globalAlpha = 1;
+    }
   }
 
   function paintAt(event: PointerEvent<HTMLCanvasElement>) {
@@ -406,6 +475,26 @@ export function PatternMakerPage() {
     renderPatternPreviews();
   }
 
+  function pickColorAt(event: PointerEvent<HTMLCanvasElement>) {
+    const canvas = paintCanvasRef.current;
+    const context = canvas?.getContext("2d", { willReadFrequently: true });
+
+    if (!canvas || !context) {
+      return;
+    }
+
+    const point = getCanvasPoint(event, canvas);
+    const pixel = context.getImageData(
+      Math.max(0, Math.min(tileSize - 1, Math.floor(point.x))),
+      Math.max(0, Math.min(tileSize - 1, Math.floor(point.y))),
+      1,
+      1,
+    ).data;
+
+    setSelectedColor(rgbToHex(pixel[0], pixel[1], pixel[2]));
+    setTransferMessage("Picked colour from tile.");
+  }
+
   function updateBrushPreview(event: PointerEvent<HTMLCanvasElement>) {
     setBrushPreviewPoint(getCanvasPoint(event, event.currentTarget));
   }
@@ -413,6 +502,12 @@ export function PatternMakerPage() {
   function handlePointerDown(event: PointerEvent<HTMLCanvasElement>) {
     event.currentTarget.setPointerCapture(event.pointerId);
     updateBrushPreview(event);
+
+    if (selectedTool === "eyedropper") {
+      pickColorAt(event);
+      return;
+    }
+
     pushUndoState();
     isPaintingRef.current = true;
     lastPointRef.current = null;
@@ -452,6 +547,53 @@ export function PatternMakerPage() {
     navigate("/generator");
   }
 
+  function handleExportPattern() {
+    const canvas = paintCanvasRef.current;
+
+    if (!canvas) {
+      return;
+    }
+
+    const link = document.createElement("a");
+    link.href = canvas.toDataURL("image/png");
+    link.download = "magiceyelab-pattern.png";
+    link.click();
+  }
+
+  async function handleImportPattern(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    event.target.value = "";
+
+    if (!file) {
+      return;
+    }
+
+    if (!acceptedPatternTypes.has(file.type)) {
+      setTransferMessage("Choose a PNG, JPEG, or WebP image.");
+      return;
+    }
+
+    const canvas = paintCanvasRef.current;
+    const context = canvas?.getContext("2d");
+
+    if (!canvas || !context) {
+      return;
+    }
+
+    try {
+      const image = await loadImageFile(file);
+      pushUndoState();
+      context.fillStyle = "#f7f5ef";
+      context.fillRect(0, 0, tileSize, tileSize);
+      context.drawImage(image, 0, 0, tileSize, tileSize);
+      renderPatternPreviews();
+      setTransferMessage(`Imported ${file.name}.`);
+    } catch {
+      setTransferMessage("Could not import that pattern image.");
+    }
+  }
+
   async function handleLoadGeneratorPattern() {
     const canvas = paintCanvasRef.current;
     const context = canvas?.getContext("2d");
@@ -465,7 +607,6 @@ export function PatternMakerPage() {
     try {
       const image = await loadImageSource(storedPattern);
       pushUndoState();
-      context.clearRect(0, 0, tileSize, tileSize);
       context.fillStyle = "#f7f5ef";
       context.fillRect(0, 0, tileSize, tileSize);
       context.drawImage(image, 0, 0, tileSize, tileSize);
@@ -522,6 +663,11 @@ export function PatternMakerPage() {
     renderPatternPreviews();
   }
 
+  function handleClearTile() {
+    clearTile();
+    setTransferMessage("Cleared pattern tile.");
+  }
+
   function handleUndo() {
     const snapshot = undoStackRef.current.at(-1);
     const currentSnapshot = captureCanvasState();
@@ -556,16 +702,40 @@ export function PatternMakerPage() {
 
   useEffect(() => {
     function handleKeyboardShortcut(event: KeyboardEvent) {
-      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "z") {
+      if (event.ctrlKey || event.metaKey) {
+        if (event.key.toLowerCase() !== "z") {
+          return;
+        }
+
+        event.preventDefault();
+
+        if (event.shiftKey) {
+          handleRedo();
+        } else {
+          handleUndo();
+        }
+
         return;
       }
 
-      event.preventDefault();
+      if (
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement ||
+        event.target instanceof HTMLSelectElement
+      ) {
+        return;
+      }
 
-      if (event.shiftKey) {
-        handleRedo();
-      } else {
-        handleUndo();
+      const shortcutTool = {
+        b: "brush",
+        e: "eraser",
+        i: "eyedropper",
+        p: "pencil",
+      }[event.key.toLowerCase()] as PatternTool | undefined;
+
+      if (shortcutTool) {
+        event.preventDefault();
+        setSelectedTool(shortcutTool);
       }
     }
 
@@ -630,6 +800,7 @@ export function PatternMakerPage() {
   }, []);
 
   const scaledBrushPreviewSize = Math.max(8, brushSize);
+  const activeBrushShape = getActiveBrushShape();
   const brushPreviewStyle: BrushPreviewStyle = {
     "--brush-preview-size": `${scaledBrushPreviewSize}px`,
   };
@@ -641,7 +812,7 @@ export function PatternMakerPage() {
       }
     : undefined;
   const brushShapeClassName = classNames(styles.brushShape, {
-    [styles.pencilShape]: selectedTool === "pencil",
+    [styles.squareShape]: activeBrushShape === "square",
     [styles.eraserShape]: selectedTool === "eraser",
   });
 
@@ -681,6 +852,14 @@ export function PatternMakerPage() {
                 <MdiIcon path={mdiEraser} />
                 Eraser
               </button>
+              <button
+                type="button"
+                aria-pressed={selectedTool === "eyedropper"}
+                onClick={() => setSelectedTool("eyedropper")}
+              >
+                <MdiIcon path={mdiEyedropper} />
+                Pick
+              </button>
             </div>
           </FieldGroup>
 
@@ -705,6 +884,38 @@ export function PatternMakerPage() {
                 onChange={(event) => setBrushSize(Number(event.target.value))}
               />
             </label>
+            <label className={styles.rangeField}>
+              <span className={styles.rangeLabel}>
+                <span>Opacity</span>
+                <output>{brushOpacity}%</output>
+              </span>
+              <input
+                type="range"
+                aria-label="Brush opacity"
+                min="10"
+                max="100"
+                value={brushOpacity}
+                onChange={(event) => setBrushOpacity(Number(event.target.value))}
+              />
+            </label>
+            <div className={styles.shapeControl} aria-label="Brush shape">
+              <button
+                type="button"
+                aria-pressed={brushShape === "circle"}
+                onClick={() => setBrushShape("circle")}
+              >
+                <MdiIcon path={mdiShapeCirclePlus} />
+                Circle
+              </button>
+              <button
+                type="button"
+                aria-pressed={brushShape === "square"}
+                onClick={() => setBrushShape("square")}
+              >
+                <MdiIcon path={mdiShapeSquarePlus} />
+                Square
+              </button>
+            </div>
             <label className={styles.toggleField}>
               <input
                 type="checkbox"
@@ -715,6 +926,18 @@ export function PatternMakerPage() {
               <span className={styles.toggleLabel}>
                 <MdiIcon path={mdiGrid} />
                 Show grid
+              </span>
+            </label>
+            <label className={styles.toggleField}>
+              <input
+                type="checkbox"
+                checked={showTileBoundary}
+                onChange={(event) => setShowTileBoundary(event.target.checked)}
+              />
+              <span className={styles.toggleSwitch} aria-hidden="true" />
+              <span className={styles.toggleLabel}>
+                <MdiIcon path={mdiVectorSquare} />
+                Show boundary
               </span>
             </label>
           </FieldGroup>
@@ -742,6 +965,30 @@ export function PatternMakerPage() {
             <MdiIcon path={mdiDiceMultiple} />
             Random pattern
           </button>
+
+          <FieldGroup title="Pattern File">
+            <div className={styles.actionStack}>
+              <input
+                ref={importInputRef}
+                className={styles.hiddenInput}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={handleImportPattern}
+              />
+              <button type="button" onClick={() => importInputRef.current?.click()}>
+                <MdiIcon path={mdiUpload} />
+                Import PNG
+              </button>
+              <button type="button" onClick={handleExportPattern}>
+                <MdiIcon path={mdiDownload} />
+                Export PNG
+              </button>
+              <button type="button" onClick={handleClearTile}>
+                <MdiIcon path={mdiTrashCanOutline} />
+                Clear tile
+              </button>
+            </div>
+          </FieldGroup>
 
           <div className={styles.iconRow} aria-label="Pattern history">
             <button type="button" aria-label="Undo" disabled={!canUndo} onClick={handleUndo}>
@@ -790,7 +1037,11 @@ export function PatternMakerPage() {
               height={tileSize}
               aria-hidden="true"
             />
-            <div className={styles.canvasCell}>
+            <div
+              className={classNames(styles.canvasCell, {
+                [styles.canvasCellBoundary]: showTileBoundary,
+              })}
+            >
               <canvas
                 ref={paintCanvasRef}
                 className={styles.paintCanvas}
@@ -804,10 +1055,13 @@ export function PatternMakerPage() {
                 onPointerLeave={handlePointerLeave}
               />
               {showGrid ? <div className={styles.gridOverlay} aria-hidden="true" /> : null}
+              {showTileBoundary ? (
+                <div className={styles.tileBoundaryOverlay} aria-hidden="true" />
+              ) : null}
               {brushCursorStyle ? (
                 <div
                   className={classNames(styles.brushCursor, {
-                    [styles.pencilBrushCursor]: selectedTool === "pencil",
+                    [styles.squareBrushCursor]: activeBrushShape === "square",
                     [styles.eraserBrushCursor]: selectedTool === "eraser",
                   })}
                   style={brushCursorStyle}

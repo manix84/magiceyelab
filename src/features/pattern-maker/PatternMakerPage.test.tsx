@@ -22,6 +22,7 @@ function createCanvasContextMock() {
     set lineCap(_value: unknown) {},
     set lineJoin(_value: unknown) {},
     set lineWidth(_value: unknown) {},
+    set globalAlpha(_value: unknown) {},
     set strokeStyle(_value: unknown) {},
     canvas: document.createElement("canvas"),
   };
@@ -39,6 +40,7 @@ describe("PatternMakerPage", () => {
   let context: ReturnType<typeof createCanvasContextMock>;
   let getContextSpy: ReturnType<typeof vi.spyOn>;
   let toDataUrlSpy: ReturnType<typeof vi.spyOn>;
+  let anchorClickSpy: ReturnType<typeof vi.spyOn>;
   let storage: Map<string, string>;
   let setItemSpy: ReturnType<typeof vi.fn>;
 
@@ -54,6 +56,9 @@ describe("PatternMakerPage", () => {
     toDataUrlSpy = vi
       .spyOn(HTMLCanvasElement.prototype, "toDataURL")
       .mockReturnValue("data:image/png;base64,pattern");
+    anchorClickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => undefined);
 
     Object.defineProperty(window, "localStorage", {
       configurable: true,
@@ -69,6 +74,7 @@ describe("PatternMakerPage", () => {
 
   afterEach(() => {
     cleanup();
+    anchorClickSpy.mockRestore();
     getContextSpy.mockRestore();
     toDataUrlSpy.mockRestore();
   });
@@ -92,12 +98,14 @@ describe("PatternMakerPage", () => {
     expect(context.fillRect).toHaveBeenCalled();
   });
 
-  it("supports pencil, brush sizing, grid toggle, and history controls", async () => {
+  it("supports pencil, brush settings, display toggles, and history controls", async () => {
     const user = userEvent.setup();
     renderPatternMakerPage();
 
     await user.click(screen.getByRole("button", { name: "Pencil" }));
+    await user.click(screen.getByRole("button", { name: "Square" }));
     await user.click(screen.getByLabelText("Show grid"));
+    await user.click(screen.getByLabelText("Show boundary"));
 
     expect(screen.getByRole("button", { name: "Pencil" })).toHaveAttribute(
       "aria-pressed",
@@ -105,7 +113,13 @@ describe("PatternMakerPage", () => {
     );
     expect(screen.getByLabelText("pencil preview, 36px")).toBeInTheDocument();
     expect(screen.getByRole("slider", { name: "Brush size" })).toHaveValue("36");
+    expect(screen.getByRole("slider", { name: "Brush opacity" })).toHaveValue("100");
+    expect(screen.getByRole("button", { name: "Square" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
     expect(screen.getByLabelText("Show grid")).not.toBeChecked();
+    expect(screen.getByLabelText("Show boundary")).not.toBeChecked();
     expect(screen.getByRole("button", { name: "Undo" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Redo" })).toBeDisabled();
   });
@@ -121,6 +135,45 @@ describe("PatternMakerPage", () => {
 
     fireEvent.keyDown(window, { key: "z", ctrlKey: true, shiftKey: true });
     expect(context.putImageData).toHaveBeenCalledTimes(2);
+  });
+
+  it("supports tool keyboard shortcuts", () => {
+    renderPatternMakerPage();
+
+    fireEvent.keyDown(window, { key: "p" });
+    expect(screen.getByRole("button", { name: "Pencil" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
+    fireEvent.keyDown(window, { key: "e" });
+    expect(screen.getByRole("button", { name: "Eraser" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
+    fireEvent.keyDown(window, { key: "i" });
+    expect(screen.getByRole("button", { name: "Pick" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
+    fireEvent.keyDown(window, { key: "b" });
+    expect(screen.getByRole("button", { name: "Brush" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  it("exports and clears the pattern tile", async () => {
+    const user = userEvent.setup();
+    renderPatternMakerPage();
+
+    await user.click(screen.getByRole("button", { name: "Export PNG" }));
+    expect(toDataUrlSpy).toHaveBeenCalledWith("image/png");
+
+    await user.click(screen.getByRole("button", { name: "Clear tile" }));
+    expect(context.fillRect).toHaveBeenCalledWith(0, 0, 512, 512);
   });
 
   it("saves the current tile as the generator pattern", async () => {

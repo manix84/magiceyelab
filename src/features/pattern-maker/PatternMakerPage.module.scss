@@ -14,7 +14,7 @@
 
 .segmentedControl {
   @include mixins.segmented-control;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .rangeField {
@@ -68,7 +68,7 @@
     0 0 18px rgba(var(--color-accent-rgb), 0.2);
 }
 
-.pencilShape {
+.squareShape {
   border-radius: 3px;
 }
 
@@ -81,6 +81,11 @@
   display: flex;
   justify-content: space-between;
   gap: 0.75rem;
+}
+
+.shapeControl {
+  @include mixins.segmented-control;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 label.toggleField {
@@ -191,6 +196,16 @@ label.toggleField {
   gap: 0.5rem;
 }
 
+.hiddenInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .transferMessage {
   margin: 0;
   color: var(--color-muted);
@@ -262,10 +277,14 @@ label.toggleField {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  border: 1px solid var(--color-accent);
+  border: 1px solid var(--color-border-muted);
   border-radius: 8px;
   background: var(--color-surface-subtle);
   box-shadow: 0 10px 28px var(--shadow-soft);
+}
+
+.canvasCellBoundary {
+  border-color: var(--color-accent);
 }
 
 .gridOverlay {
@@ -279,11 +298,21 @@ label.toggleField {
   background-size: 6.25% 6.25%;
 }
 
+.tileBoundaryOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border: 2px solid rgba(var(--color-accent-rgb), 0.54);
+  border-radius: 7px;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px var(--color-surface);
+}
+
 .brushCursor {
   position: absolute;
   top: var(--brush-cursor-y);
   left: var(--brush-cursor-x);
-  z-index: 2;
+  z-index: 3;
   width: var(--brush-cursor-size);
   min-width: 0.5rem;
   aspect-ratio: 1;
@@ -296,7 +325,7 @@ label.toggleField {
     0 0 16px rgba(var(--color-accent-rgb), 0.36);
 }
 
-.pencilBrushCursor {
+.squareBrushCursor {
   border-radius: 3px;
 }
 

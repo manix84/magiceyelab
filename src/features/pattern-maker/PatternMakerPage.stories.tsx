@@ -27,8 +27,13 @@ export const SeamlessTile: Story = {
     await expect(canvas.getByLabelText("Pattern painting tile")).toBeVisible();
     await expect(canvas.getByLabelText("Seamless pattern preview")).toBeVisible();
     await expect(canvas.getByRole("button", { name: "Pencil" })).toBeVisible();
+    await expect(canvas.getByRole("button", { name: "Pick" })).toBeVisible();
     await expect(canvas.getByRole("slider", { name: "Brush size" })).toBeVisible();
+    await expect(canvas.getByRole("slider", { name: "Brush opacity" })).toBeVisible();
     await expect(canvas.getByLabelText("Show grid")).toBeChecked();
+    await expect(canvas.getByLabelText("Show boundary")).toBeChecked();
+    await expect(canvas.getByRole("button", { name: "Import PNG" })).toBeVisible();
+    await expect(canvas.getByRole("button", { name: "Export PNG" })).toBeVisible();
 
     await userEvent.click(canvas.getByRole("button", { name: "Random pattern" }));
     await expect(canvas.getByRole("button", { name: "Random pattern" })).toBeVisible();

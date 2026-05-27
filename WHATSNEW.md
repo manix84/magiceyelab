@@ -4,14 +4,19 @@
 
 - Added a square pattern painting tile for building seamless textures.
 - Added Pencil mode for hard-edged pattern drawing.
+- Added Eyedropper mode for picking colours from the tile.
 - Added adjustable brush size.
+- Added brush opacity and circle/square shape controls.
 - Added brush and pencil shape previews in the controls and over the paint tile.
 - Added an optional grid overlay for precise tile work.
+- Added an optional tile boundary guide.
 - Added stroke/action-based undo and redo controls.
+- Added keyboard shortcuts for pencil, brush, eraser, picker, undo, and redo.
 - Added opposite-edge preview strips around the tile so top/bottom and left/right seams can be checked while painting.
 - Added wraparound painting so manual strokes continue across tile edges and corners.
 - Added a repeated preview panel that shows multiple tiled copies instead of stretching one tile.
 - Updated random pattern generation so generated motifs wrap across tile edges.
+- Added pattern PNG import, export, and clear tile controls.
 - Added Pattern Maker to Generator handoff, plus editing support for the Generator's current pattern.
 - Added Pattern Maker unit coverage and a Storybook story for the seamless tile workflow.
 

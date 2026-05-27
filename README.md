@@ -58,16 +58,21 @@ Instead of relying on imported images, you can draw your own seamless repeating 
 
 - 🎮 Canvas-based drawing tools
 - ✏️ Hard-edged Pencil mode for crisp tile work
+- 💧 Eyedropper colour picking from the tile
 - 🖌️ Adjustable brush size
+- 🌫️ Brush opacity and circle/square shape controls
 - ⭕ Brush and pencil size previews on the controls and canvas
 - ♾️ Square painting tile with opposite-edge seam previews
 - 🔁 Wraparound painting across tile edges and corners
 - #️⃣ Optional grid overlay
+- ⬚ Optional tile boundary guide
 - ↩️ Stroke-based undo / redo
+- ⌨️ Tool shortcuts for pencil, brush, eraser, and picker
 - 🧱 Repeated preview panel showing multiple tiled copies
 - 🎨 Palette controls
 - 🔗 Send the current tile to the Generator, or edit the Generator's current pattern
-- 📥 Import/export patterns
+- 📥 Import/export pattern PNGs
+- 🧹 Clear tile control
 - 🎲 Seamless random pattern generation
 - ⚡ Live stereogram updates
 
