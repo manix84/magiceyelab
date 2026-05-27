@@ -39,6 +39,17 @@
   @include mixins.primary-action;
 }
 
+.actionStack {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.transferMessage {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
 .previewArea {
   @include mixins.preview-area;
 }

@@ -58,8 +58,10 @@ Instead of relying on imported images, you can draw your own seamless repeating 
 
 - 🎮 Canvas-based drawing tools
 - ♾️ Square painting tile with opposite-edge seam previews
+- 🔁 Wraparound painting across tile edges and corners
 - 🧱 Repeated preview panel showing multiple tiled copies
 - 🎨 Palette controls
+- 🔗 Send the current tile to the Generator, or edit the Generator's current pattern
 - 📥 Import/export patterns
 - 🎲 Seamless random pattern generation
 - ⚡ Live stereogram updates

@@ -6,17 +6,58 @@ import {
   useState,
 } from "react";
 import classNames from "classnames";
-import { mdiBrush, mdiDiceMultiple, mdiEraser, mdiPalette } from "@mdi/js";
+import {
+  mdiBrush,
+  mdiDiceMultiple,
+  mdiEraser,
+  mdiImageEdit,
+  mdiPalette,
+  mdiSend,
+} from "@mdi/js";
+import { useNavigate } from "react-router-dom";
 import { FieldGroup } from "../../components/controls/FieldGroup";
 import { MdiIcon } from "../../components/icons/MdiIcon";
 import { PageHeader } from "../../components/layout/PageHeader";
+import { storageKeys } from "../../lib/storage/keys";
 import styles from "./PatternMakerPage.module.scss";
 
 const palette = ["#1d3557", "#e63946", "#f1faee", "#2a9d8f", "#f4a261"];
 const tileSize = 512;
 const seamSize = 56;
 const repeatPreviewTileSize = 160;
+const brushRadius = 18;
+const brushSpacing = 8;
 type PatternTool = "brush" | "eraser";
+type CanvasPoint = {
+  x: number;
+  y: number;
+};
+
+type StoredGeneratorState = {
+  version: 1;
+  exportName: string;
+  depthStrength: number;
+  repeatWidth: number;
+  showDepthOverlay: boolean;
+  depthFileName: string;
+  depthInferenceMessage: string;
+  depthImageDataUrl: string;
+  patternFileName: string;
+  patternImageDataUrl: string;
+};
+
+const defaultGeneratorState: StoredGeneratorState = {
+  version: 1,
+  exportName: "",
+  depthStrength: 45,
+  repeatWidth: 120,
+  showDepthOverlay: false,
+  depthFileName: "",
+  depthInferenceMessage: "",
+  depthImageDataUrl: "",
+  patternFileName: "",
+  patternImageDataUrl: "",
+};
 
 function getCanvasPoint(
   event: PointerEvent<HTMLCanvasElement>,
@@ -87,9 +128,53 @@ function createRepeatPreviewTile(sourceCanvas: HTMLCanvasElement) {
   return previewTile;
 }
 
+function readStoredGeneratorState() {
+  try {
+    const storedValue = window.localStorage.getItem(storageKeys.generator);
+
+    if (!storedValue) {
+      return defaultGeneratorState;
+    }
+
+    return {
+      ...defaultGeneratorState,
+      ...(JSON.parse(storedValue) as Partial<StoredGeneratorState>),
+      version: 1 as const,
+    };
+  } catch {
+    return defaultGeneratorState;
+  }
+}
+
+function loadImageSource(source: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Could not load stored pattern image."));
+    image.src = source;
+  });
+}
+
+function writeStoredGeneratorPattern(patternImageDataUrl: string) {
+  const storedGeneratorState = readStoredGeneratorState();
+  const nextGeneratorState: StoredGeneratorState = {
+    ...storedGeneratorState,
+    patternFileName: "pattern-maker-tile.png",
+    patternImageDataUrl,
+  };
+
+  window.localStorage.setItem(
+    storageKeys.generator,
+    JSON.stringify(nextGeneratorState),
+  );
+}
+
 export function PatternMakerPage() {
+  const navigate = useNavigate();
   const [selectedTool, setSelectedTool] = useState<PatternTool>("brush");
   const [selectedColor, setSelectedColor] = useState(palette[0]);
+  const [transferMessage, setTransferMessage] = useState("");
   const paintCanvasRef = useRef<HTMLCanvasElement>(null);
   const topSeamRef = useRef<HTMLCanvasElement>(null);
   const rightSeamRef = useRef<HTMLCanvasElement>(null);
@@ -97,6 +182,7 @@ export function PatternMakerPage() {
   const leftSeamRef = useRef<HTMLCanvasElement>(null);
   const repeatPreviewRef = useRef<HTMLCanvasElement>(null);
   const isPaintingRef = useRef(false);
+  const lastPointRef = useRef<CanvasPoint | null>(null);
 
   const renderPatternPreviews = useCallback(() => {
     const paintCanvas = paintCanvasRef.current;
@@ -194,6 +280,11 @@ export function PatternMakerPage() {
     }
   }, []);
 
+  function paintStamp(context: CanvasRenderingContext2D, point: CanvasPoint) {
+    context.fillStyle = selectedTool === "eraser" ? "#f7f5ef" : selectedColor;
+    drawWrappedCircle(context, point.x, point.y, brushRadius);
+  }
+
   function paintAt(event: PointerEvent<HTMLCanvasElement>) {
     const canvas = paintCanvasRef.current;
     const context = canvas?.getContext("2d");
@@ -203,16 +294,34 @@ export function PatternMakerPage() {
     }
 
     const point = getCanvasPoint(event, canvas);
-    context.fillStyle = selectedTool === "eraser" ? "#f7f5ef" : selectedColor;
-    context.beginPath();
-    context.arc(point.x, point.y, 18, 0, Math.PI * 2);
-    context.fill();
+    const lastPoint = lastPointRef.current;
+
+    if (!lastPoint) {
+      paintStamp(context, point);
+      lastPointRef.current = point;
+      renderPatternPreviews();
+      return;
+    }
+
+    const distance = Math.hypot(point.x - lastPoint.x, point.y - lastPoint.y);
+    const steps = Math.max(1, Math.ceil(distance / brushSpacing));
+
+    for (let step = 1; step <= steps; step += 1) {
+      const progress = step / steps;
+      paintStamp(context, {
+        x: lastPoint.x + (point.x - lastPoint.x) * progress,
+        y: lastPoint.y + (point.y - lastPoint.y) * progress,
+      });
+    }
+
+    lastPointRef.current = point;
     renderPatternPreviews();
   }
 
   function handlePointerDown(event: PointerEvent<HTMLCanvasElement>) {
     event.currentTarget.setPointerCapture(event.pointerId);
     isPaintingRef.current = true;
+    lastPointRef.current = null;
     paintAt(event);
   }
 
@@ -228,6 +337,41 @@ export function PatternMakerPage() {
     }
 
     isPaintingRef.current = false;
+    lastPointRef.current = null;
+  }
+
+  function handleUseInGenerator() {
+    const canvas = paintCanvasRef.current;
+
+    if (!canvas) {
+      return;
+    }
+
+    writeStoredGeneratorPattern(canvas.toDataURL("image/png"));
+    navigate("/generator");
+  }
+
+  async function handleLoadGeneratorPattern() {
+    const canvas = paintCanvasRef.current;
+    const context = canvas?.getContext("2d");
+    const storedPattern = readStoredGeneratorState().patternImageDataUrl;
+
+    if (!canvas || !context || !storedPattern) {
+      setTransferMessage("No generator pattern to load.");
+      return;
+    }
+
+    try {
+      const image = await loadImageSource(storedPattern);
+      context.clearRect(0, 0, tileSize, tileSize);
+      context.fillStyle = "#f7f5ef";
+      context.fillRect(0, 0, tileSize, tileSize);
+      context.drawImage(image, 0, 0, tileSize, tileSize);
+      renderPatternPreviews();
+      setTransferMessage("Loaded generator pattern.");
+    } catch {
+      setTransferMessage("Could not load generator pattern.");
+    }
   }
 
   function handleRandomPattern() {
@@ -285,7 +429,30 @@ export function PatternMakerPage() {
 
     context.fillStyle = "#f7f5ef";
     context.fillRect(0, 0, tileSize, tileSize);
-    renderPatternPreviews();
+
+    const storedPattern = readStoredGeneratorState().patternImageDataUrl;
+
+    if (!storedPattern) {
+      renderPatternPreviews();
+      return;
+    }
+
+    let isCurrent = true;
+
+    void loadImageSource(storedPattern)
+      .then((image) => {
+        if (!isCurrent) {
+          return;
+        }
+
+        context.drawImage(image, 0, 0, tileSize, tileSize);
+        renderPatternPreviews();
+      })
+      .catch(() => renderPatternPreviews());
+
+    return () => {
+      isCurrent = false;
+    };
   }, [renderPatternPreviews]);
 
   useEffect(() => {
@@ -361,6 +528,22 @@ export function PatternMakerPage() {
             <MdiIcon path={mdiDiceMultiple} />
             Random pattern
           </button>
+
+          <FieldGroup title="Generator">
+            <div className={styles.actionStack}>
+              <button type="button" onClick={handleLoadGeneratorPattern}>
+                <MdiIcon path={mdiImageEdit} />
+                Edit generator pattern
+              </button>
+              <button type="button" onClick={handleUseInGenerator}>
+                <MdiIcon path={mdiSend} />
+                Use in generator
+              </button>
+            </div>
+            {transferMessage ? (
+              <p className={styles.transferMessage}>{transferMessage}</p>
+            ) : null}
+          </FieldGroup>
         </aside>
 
         <section

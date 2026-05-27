@@ -4,8 +4,10 @@
 
 - Added a square pattern painting tile for building seamless textures.
 - Added opposite-edge preview strips around the tile so top/bottom and left/right seams can be checked while painting.
+- Added wraparound painting so manual strokes continue across tile edges and corners.
 - Added a repeated preview panel that shows multiple tiled copies instead of stretching one tile.
 - Updated random pattern generation so generated motifs wrap across tile edges.
+- Added Pattern Maker to Generator handoff, plus editing support for the Generator's current pattern.
 - Added Pattern Maker unit coverage and a Storybook story for the seamless tile workflow.
 
 ---

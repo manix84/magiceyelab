@@ -101,9 +101,11 @@ Allow users to create a seamless repeating pattern directly in the browser.
 - Colour picker
 - Palette support
 - Seamless tile preview with opposite-edge strips around the active painting tile
+- Wraparound painting across tile boundaries and corners
 - Repeated pattern preview that shows several tiled copies at once
 - Import pattern image
 - Export pattern image
+- Send created patterns to the Generator and edit the Generator's current pattern
 - Random pattern generator that creates wrapped motifs so generated tiles repeat cleanly
 
 ### Nice To Have
@@ -225,7 +227,9 @@ Users can paint their own hidden image and generate a stereogram from it.
 - Add palette
 - Add brush and eraser tools
 - Add seamless tile preview with live opposite-edge references
+- Add wraparound painting for strokes that cross tile boundaries
 - Add random pattern generator that draws wrapped seamless shapes
+- Add Pattern Maker / Generator handoff
 - Add export pattern
 - Connect created pattern to generator
 
