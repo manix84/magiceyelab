@@ -10,15 +10,66 @@
 
 .toolPanel {
   @include mixins.tool-panel;
+  gap: 0;
   border: 0;
   padding: 0;
   background: transparent;
+  scrollbar-gutter: stable;
+
+  > section + section {
+    margin-top: 1rem;
+  }
 
   > section {
     border: 1px solid var(--color-border-soft);
     border-radius: 8px;
     padding: 1rem;
     background: var(--color-surface);
+  }
+
+  @media (min-width: 841px) {
+    position: sticky;
+    top: 5.75rem;
+    height: min(calc(100vh - 6.75rem), clamp(24rem, 58vh, 42rem));
+    max-height: min(calc(100vh - 6.75rem), clamp(24rem, 58vh, 42rem));
+    overflow-y: auto;
+    padding-right: 0.15rem;
+
+    &::before,
+    &::after {
+      position: sticky;
+      z-index: 5;
+      display: block;
+      height: 1.75rem;
+      opacity: 0;
+      pointer-events: none;
+      content: "";
+      transition: opacity 120ms ease;
+    }
+
+    &::before {
+      top: 0;
+      margin-bottom: -1.75rem;
+      background: linear-gradient(to bottom, var(--color-page), transparent);
+    }
+
+    &::after {
+      bottom: 0;
+      margin-top: -1.75rem;
+      background: linear-gradient(to top, var(--color-page), transparent);
+    }
+  }
+}
+
+.toolPanelScrolledTop {
+  &::before {
+    opacity: 1;
+  }
+}
+
+.toolPanelScrolledBottom {
+  &::after {
+    opacity: 1;
   }
 }
 

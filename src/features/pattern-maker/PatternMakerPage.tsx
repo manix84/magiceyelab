@@ -2,6 +2,7 @@ import {
   type ChangeEvent,
   type CSSProperties,
   type PointerEvent,
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -530,6 +531,10 @@ export function PatternMakerPage() {
   const [canRedo, setCanRedo] = useState(false);
   const [brushPreviewPoint, setBrushPreviewPoint] = useState<CanvasPoint | null>(null);
   const [hoverSampleColor, setHoverSampleColor] = useState(selectedColor);
+  const [toolPanelScrollState, setToolPanelScrollState] = useState({
+    isScrolledFromBottom: false,
+    isScrolledFromTop: false,
+  });
   const paintCanvasRef = useRef<HTMLCanvasElement>(null);
   const topSeamRef = useRef<HTMLCanvasElement>(null);
   const rightSeamRef = useRef<HTMLCanvasElement>(null);
@@ -542,6 +547,7 @@ export function PatternMakerPage() {
   const strokeCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const strokeContextRef = useRef<CanvasRenderingContext2D | null>(null);
   const shapeDraftRef = useRef<ShapeDraft | null>(null);
+  const toolPanelRef = useRef<HTMLElement>(null);
   const undoStackRef = useRef<ImageData[]>([]);
   const redoStackRef = useRef<ImageData[]>([]);
   const importInputRef = useRef<HTMLInputElement>(null);
@@ -666,6 +672,26 @@ export function PatternMakerPage() {
     setCanUndo(undoStackRef.current.length > 0);
     setCanRedo(redoStackRef.current.length > 0);
   }
+
+  const updateToolPanelScrollState = useCallback(() => {
+    const panel = toolPanelRef.current;
+
+    if (!panel) {
+      return;
+    }
+
+    const nextScrollState = {
+      isScrolledFromBottom: panel.scrollTop + panel.clientHeight < panel.scrollHeight - 1,
+      isScrolledFromTop: panel.scrollTop > 1,
+    };
+
+    setToolPanelScrollState((currentScrollState) => (
+      currentScrollState.isScrolledFromBottom === nextScrollState.isScrolledFromBottom &&
+      currentScrollState.isScrolledFromTop === nextScrollState.isScrolledFromTop
+        ? currentScrollState
+        : nextScrollState
+    ));
+  }, []);
 
   function updateShapeDraft(nextDraft: ShapeDraft | null) {
     shapeDraftRef.current = nextDraft;
@@ -1581,6 +1607,17 @@ export function PatternMakerPage() {
   });
 
   useEffect(() => {
+    updateToolPanelScrollState();
+    window.addEventListener("resize", updateToolPanelScrollState);
+
+    return () => window.removeEventListener("resize", updateToolPanelScrollState);
+  }, [updateToolPanelScrollState]);
+
+  useEffect(() => {
+    updateToolPanelScrollState();
+  });
+
+  useEffect(() => {
     const canvas = paintCanvasRef.current;
     const context = canvas?.getContext("2d");
 
@@ -1696,7 +1733,15 @@ export function PatternMakerPage() {
       />
 
       <div className={styles.workspaceGrid}>
-        <aside className={styles.toolPanel} aria-label="Pattern maker controls">
+        <aside
+          ref={toolPanelRef}
+          className={classNames(styles.toolPanel, {
+            [styles.toolPanelScrolledBottom]: toolPanelScrollState.isScrolledFromBottom,
+            [styles.toolPanelScrolledTop]: toolPanelScrollState.isScrolledFromTop,
+          })}
+          aria-label="Pattern maker controls"
+          onScroll={updateToolPanelScrollState}
+        >
           <FieldGroup title="Paint">
             <div className={styles.panelHeader}>
               <span className={styles.panelSubheading}>Tools</span>
