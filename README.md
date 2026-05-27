@@ -57,7 +57,8 @@ Instead of relying on imported images, you can draw your own seamless repeating 
 ### Includes
 
 - 🎮 Canvas-based drawing tools
-- ✏️ Hard-edged Pencil mode for crisp tile work
+- ✏️ Pixel-snapped Pencil mode with hard 1px-capable square stamps
+- 🧽 Transparent Eraser mode with brush-style size, opacity, flow, hardness, and spacing
 - 🪣 Contiguous and global Fill modes with tolerance control
 - 💧 Eyedropper colour picking from the tile
 - 🖌️ Adjustable brush size

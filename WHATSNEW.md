@@ -3,7 +3,8 @@
 ## 🧩 Pattern Maker Improvements
 
 - Added a square pattern painting tile for building seamless textures.
-- Added Pencil mode for hard-edged pattern drawing.
+- Added Pencil mode for pixel-snapped, hard-edged pattern drawing with 1px-capable square stamps.
+- Updated Eraser mode to remove pixels to transparency with brush-style opacity, flow, hardness, spacing, and wraparound stamping.
 - Added Fill mode with contiguous/global fill options and tolerance control.
 - Added Eyedropper mode for picking colours from the tile.
 - Added adjustable brush size.

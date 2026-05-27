@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PatternMakerPage } from "./PatternMakerPage";
 
 function createCanvasContextMock() {
+  const setGlobalCompositeOperation = vi.fn();
+
   return {
     beginPath: vi.fn(),
     arc: vi.fn(),
@@ -29,11 +31,16 @@ function createCanvasContextMock() {
     putImageData: vi.fn(),
     stroke: vi.fn(),
     set fillStyle(_value: unknown) {},
+    set globalCompositeOperation(value: unknown) {
+      setGlobalCompositeOperation(value);
+    },
     set lineCap(_value: unknown) {},
     set lineJoin(_value: unknown) {},
     set lineWidth(_value: unknown) {},
     set globalAlpha(_value: unknown) {},
+    set imageSmoothingEnabled(_value: unknown) {},
     set strokeStyle(_value: unknown) {},
+    setGlobalCompositeOperation,
     canvas: document.createElement("canvas"),
   };
 }
@@ -126,7 +133,7 @@ describe("PatternMakerPage", () => {
       "aria-pressed",
       "true",
     );
-    expect(screen.getByRole("slider", { name: "Brush size" })).toHaveValue("36");
+    expect(screen.getByRole("slider", { name: "Pencil size" })).toHaveValue("36");
     expect(screen.queryByRole("slider", { name: "Brush opacity" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Square" })).not.toBeInTheDocument();
 
@@ -139,6 +146,46 @@ describe("PatternMakerPage", () => {
       "true",
     );
     expect(screen.queryByRole("slider", { name: "Brush size" })).not.toBeInTheDocument();
+  });
+
+  it("uses transparent destination-out compositing for eraser strokes", async () => {
+    const user = userEvent.setup();
+    renderPatternMakerPage();
+
+    await user.click(screen.getByRole("button", { name: "Eraser" }));
+
+    expect(screen.getByRole("slider", { name: "Eraser size" })).toHaveValue("36");
+    expect(screen.getByRole("slider", { name: "Eraser opacity" })).toHaveValue("100");
+
+    const canvas = screen.getByLabelText("Pattern painting tile") as HTMLCanvasElement;
+    vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue({
+      bottom: 512,
+      height: 512,
+      left: 0,
+      right: 512,
+      toJSON: () => undefined,
+      top: 0,
+      width: 512,
+      x: 0,
+      y: 0,
+    });
+    canvas.setPointerCapture = vi.fn();
+    canvas.releasePointerCapture = vi.fn();
+    canvas.hasPointerCapture = vi.fn(() => true);
+
+    fireEvent.pointerDown(canvas, {
+      clientX: 120,
+      clientY: 120,
+      pointerId: 1,
+      pointerType: "mouse",
+    });
+    fireEvent.pointerUp(canvas, {
+      pointerId: 1,
+      pointerType: "mouse",
+    });
+
+    expect(context.setGlobalCompositeOperation).toHaveBeenCalledWith("destination-out");
+    expect(context.setGlobalCompositeOperation).toHaveBeenCalledWith("source-over");
   });
 
   it("supports display toggles and history controls", async () => {

@@ -258,7 +258,7 @@ function readStoredPatternMakerState(): StoredPatternMakerState {
       brushShape: parsedValue.brushShape === "square" ? "square" as const : "circle" as const,
       brushSize: clampNumber(
         parsedValue.brushSize,
-        4,
+        1,
         96,
         defaultPatternMakerState.brushSize,
       ),
@@ -383,6 +383,10 @@ function colorMatches(
     Math.abs(data[offset + 2] - target.blue) <= tolerance &&
     Math.abs(data[offset + 3] - target.alpha) <= tolerance
   );
+}
+
+function disableCanvasSmoothing(context: CanvasRenderingContext2D) {
+  context.imageSmoothingEnabled = false;
 }
 
 function writeStoredGeneratorPattern(patternImageDataUrl: string) {
@@ -691,7 +695,7 @@ export function PatternMakerPage() {
     const pressure = Number.isFinite(point.pressure) ? point.pressure : 1;
 
     return {
-      color: selectedTool === "eraser" ? "#f7f5ef" : selectedColor,
+      color: selectedTool === "eraser" ? "#000000" : selectedColor,
       flow: selectedTool === "pencil" ? 1 : (brushFlow / 100) * pressure,
       hardness: selectedTool === "pencil" ? 1 : brushHardness / 100,
       shape: getActiveBrushShape(),
@@ -701,6 +705,26 @@ export function PatternMakerPage() {
 
   function paintStamp(context: CanvasRenderingContext2D, point: StrokePoint) {
     const stamp = getStampSettings(point);
+
+    if (selectedTool === "pencil") {
+      disableCanvasSmoothing(context);
+      context.globalAlpha = 1;
+      context.fillStyle = stamp.color;
+
+      const size = Math.max(1, Math.round(stamp.size));
+      const halfSize = size / 2;
+      const x = Math.floor(point.x - halfSize);
+      const y = Math.floor(point.y - halfSize);
+
+      for (const offsetX of [-tileSize, 0, tileSize]) {
+        for (const offsetY of [-tileSize, 0, tileSize]) {
+          context.fillRect(x + offsetX, y + offsetY, size, size);
+        }
+      }
+
+      return;
+    }
+
     context.globalAlpha = stamp.flow;
 
     try {
@@ -753,9 +777,12 @@ export function PatternMakerPage() {
       return;
     }
 
+    disableCanvasSmoothing(context);
     context.putImageData(strokeBase, 0, 0);
     context.globalAlpha = selectedTool === "pencil" ? 1 : brushOpacity / 100;
+    context.globalCompositeOperation = selectedTool === "eraser" ? "destination-out" : "source-over";
     context.drawImage(strokeCanvas, 0, 0);
+    context.globalCompositeOperation = "source-over";
     context.globalAlpha = 1;
     renderPatternPreviews();
   }
@@ -774,14 +801,14 @@ export function PatternMakerPage() {
     if (!lastPoint) {
       paintStamp(context, point);
       lastPointRef.current = point;
-      renderPatternPreviews();
+      compositeStrokeToCanvas();
       return;
     }
 
     const distance = Math.hypot(point.x - lastPoint.x, point.y - lastPoint.y);
     const spacing = Math.max(
       1,
-      brushSize * (selectedTool === "pencil" ? 0.18 : brushSpacing / 100),
+      brushSize * (selectedTool === "pencil" ? 0.1 : brushSpacing / 100),
     );
     const steps = Math.max(1, Math.ceil(distance / spacing));
 
@@ -955,6 +982,7 @@ export function PatternMakerPage() {
 
     strokeCanvas.width = tileSize;
     strokeCanvas.height = tileSize;
+    disableCanvasSmoothing(strokeContext);
     strokeBaseRef.current = baseSnapshot;
     strokeCanvasRef.current = strokeCanvas;
     strokeContextRef.current = strokeContext;
@@ -1278,6 +1306,7 @@ export function PatternMakerPage() {
   const usesSoftBrushControls = selectedTool === "brush" || selectedTool === "eraser";
   const usesBrushShapeControl = selectedTool === "brush" || selectedTool === "eraser";
   const usesFillControls = selectedTool === "fill";
+  const implementControlLabel = selectedTool === "eraser" ? "Eraser" : "Brush";
   const activeCursorColor = selectedTool === "eyedropper"
     ? hoverSampleColor
     : selectedTool === "eraser"
@@ -1290,7 +1319,7 @@ export function PatternMakerPage() {
       : null;
   const implementDemoStyle: ImplementDemoStyle = {
     "--implement-demo-color": activeCursorColor,
-    "--implement-demo-hardness": `${brushHardness}%`,
+    "--implement-demo-hardness": selectedTool === "pencil" ? "100%" : `${brushHardness}%`,
     "--implement-demo-opacity": selectedTool === "pencil" ? 1 : brushOpacity / 100,
     "--implement-demo-size": `${Math.max(8, brushSize)}px`,
   };
@@ -1410,12 +1439,16 @@ export function PatternMakerPage() {
                   <span>Size</span>
                   <output>{brushSize}px</output>
                 </span>
-                <input
-                  type="range"
-                  aria-label="Brush size"
-                  min="4"
-                  max="96"
-                  value={brushSize}
+                  <input
+                    type="range"
+                    aria-label={
+                      selectedTool === "pencil"
+                        ? "Pencil size"
+                        : `${implementControlLabel} size`
+                    }
+                    min="1"
+                    max="96"
+                    value={brushSize}
                   onChange={(event) => setBrushSize(Number(event.target.value))}
                 />
               </label>
@@ -1429,7 +1462,7 @@ export function PatternMakerPage() {
                   </span>
                   <input
                     type="range"
-                    aria-label="Brush opacity"
+                    aria-label={`${implementControlLabel} opacity`}
                     min="10"
                     max="100"
                     value={brushOpacity}
@@ -1443,7 +1476,7 @@ export function PatternMakerPage() {
                   </span>
                   <input
                     type="range"
-                    aria-label="Brush flow"
+                    aria-label={`${implementControlLabel} flow`}
                     min="1"
                     max="100"
                     value={brushFlow}
@@ -1457,7 +1490,7 @@ export function PatternMakerPage() {
                   </span>
                   <input
                     type="range"
-                    aria-label="Brush hardness"
+                    aria-label={`${implementControlLabel} hardness`}
                     min="0"
                     max="100"
                     value={brushHardness}
@@ -1471,7 +1504,7 @@ export function PatternMakerPage() {
                   </span>
                   <input
                     type="range"
-                    aria-label="Brush spacing"
+                    aria-label={`${implementControlLabel} spacing`}
                     min="5"
                     max="100"
                     value={brushSpacing}
@@ -1481,7 +1514,7 @@ export function PatternMakerPage() {
               </>
             ) : null}
             {usesBrushShapeControl ? (
-              <div className={styles.shapeControl} aria-label="Brush shape">
+              <div className={styles.shapeControl} aria-label={`${implementControlLabel} shape`}>
                 <button
                   type="button"
                   aria-pressed={brushShape === "circle"}

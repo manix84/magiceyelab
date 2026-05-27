@@ -98,8 +98,8 @@ Allow users to create a seamless repeating pattern directly in the browser.
 
 - Canvas-based pattern drawing
 - Pixel-style brush
-- Hard-edged pencil tool
-- Eraser
+- Pixel-snapped hard-edged pencil tool
+- Transparent eraser with brush-style size, opacity, flow, hardness, and spacing
 - Fill tool with contiguous/global modes and tolerance control
 - Eyedropper
 - Colour picker
@@ -109,6 +109,8 @@ Allow users to create a seamless repeating pattern directly in the browser.
 - Adjustable brush flow, hardness, and spacing
 - Circle/square brush shape controls
 - Stamp-based brush interpolation with per-stroke opacity clamping
+- Pixel-snapped pencil stamping with no anti-aliasing or soft opacity buildup
+- Destination-out eraser stamping with transparent output and checkerboard editing feedback
 - Colour-aware brush, fill, and eyedropper previews
 - Optional grid overlay
 - Optional tile boundary guide
@@ -241,13 +243,15 @@ Users can paint their own hidden image and generate a stereogram from it.
 - Add pattern drawing canvas
 - Add colour picker
 - Add palette
-- Add pencil, brush, and eraser tools
+- Add pixel-snapped pencil, brush, and transparent eraser tools
 - Add fill tool with contiguous/global modes and tolerance control
 - Add eyedropper colour picking
 - Add hex colour entry and recent colour swatches
 - Add brush size controls
 - Add brush opacity, flow, hardness, spacing, and shape controls
 - Add stamp-based brush interpolation with a temporary stroke buffer
+- Add pixel-snapped pencil stamping with no anti-aliasing or soft opacity buildup
+- Add destination-out eraser stamping with transparent output and checkerboard editing feedback
 - Add colour-aware brush, fill, and eyedropper previews on the canvas
 - Add optional grid overlay
 - Add optional tile boundary guide
