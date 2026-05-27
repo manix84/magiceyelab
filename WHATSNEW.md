@@ -1,5 +1,17 @@
 # ✨ What's New
 
+## 🎨 Depth Painter Improvements
+
+- Replaced the placeholder with a real monochrome depth-map canvas.
+- Added Brush, Eraser, and Fill tools tuned for grayscale depth editing.
+- Added depth value, opacity, brush size, fill tolerance, and grid controls.
+- Added stroke/action undo and redo for depth editing.
+- Added depth map import, PNG export, clear, and "Use in generator" actions.
+- Depth Painter now restores the painted map and tool settings after navigating away.
+- Added a Storybook story for the monochrome depth workflow.
+
+---
+
 ## 🧩 Pattern Maker Improvements
 
 - Added a square pattern painting tile for building seamless textures.
@@ -34,7 +46,7 @@
 
 - Generator controls now restore from browser local storage.
 - Imported generator depth and pattern images can be restored locally when returning to the page.
-- Pattern Maker drafts and Depth Painter controls now restore locally when returning to the page.
+- Pattern Maker and Depth Painter drafts now restore locally when returning to the page.
 - Stored images are bounded before saving, with a controls-only fallback if browser storage quota is exceeded.
 
 ---

@@ -37,12 +37,15 @@ Draw your own depth map directly inside the app.
 ### Includes
 
 - 🖌️ Brush tools
-- 🧽 Eraser
-- 🪣 Fill tool
+- 🧽 Mid-gray eraser
+- 🪣 Contiguous fill tool
 - 📏 Adjustable brush sizes
+- 🎚️ Depth value, opacity, and tolerance controls
+- #️⃣ Optional grid overlay
 - ↩️ Undo / redo
 - 📥 Import external depth maps
 - 📤 Export depth maps
+- 🚀 Send painted depth maps straight to the Generator
 
 Perfect for hidden scenes, text, symbols, and weird experimental depth art.
 
