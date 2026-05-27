@@ -6,8 +6,16 @@ import {
   useState,
 } from "react";
 import classNames from "classnames";
-import { mdiDownload, mdiLayersPlus, mdiTextureBox } from "@mdi/js";
+import {
+  mdiDownload,
+  mdiMovieOpenPlayOutline,
+  mdiLayersPlus,
+  mdiLayersTripleOutline,
+  mdiTextureBox,
+} from "@mdi/js";
 import { FieldGroup } from "../../components/controls/FieldGroup";
+import { RangeField } from "../../components/controls/RangeField";
+import { ToggleField } from "../../components/controls/ToggleField";
 import { MdiIcon } from "../../components/icons/MdiIcon";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { supportedImageTypes } from "../import-export";
@@ -33,6 +41,8 @@ type StoredGeneratorState = {
   version: 1;
   exportName: string;
   depthStrength: number;
+  animationEnabled: boolean;
+  animationSpeed: number;
   repeatWidth: number;
   showDepthOverlay: boolean;
   depthFileName: string;
@@ -46,6 +56,8 @@ const defaultStoredGeneratorState: StoredGeneratorState = {
   version: 1,
   exportName: "",
   depthStrength: 45,
+  animationEnabled: false,
+  animationSpeed: 32,
   repeatWidth: 120,
   showDepthOverlay: false,
   depthFileName: "",
@@ -106,6 +118,13 @@ function readStoredGeneratorState(): StoredGeneratorState {
         48,
         240,
         defaultStoredGeneratorState.repeatWidth,
+      ),
+      animationEnabled: parsedValue.animationEnabled === true,
+      animationSpeed: clampNumber(
+        parsedValue.animationSpeed,
+        4,
+        120,
+        defaultStoredGeneratorState.animationSpeed,
       ),
       showDepthOverlay: parsedValue.showDepthOverlay === true,
       depthFileName:
@@ -182,8 +201,16 @@ function getPreviewSize(image: HTMLImageElement, bounds: PreviewBounds) {
     1,
     Math.round(fallbackWidth / (image.naturalWidth / image.naturalHeight)),
   );
-  const targetWidth = bounds.width > 0 ? bounds.width : fallbackWidth;
-  const targetHeight = bounds.height > 0 ? bounds.height : fallbackHeight;
+  const imageAspectRatio = image.naturalWidth / image.naturalHeight;
+  const boundsWidth = bounds.width > 0 ? bounds.width : fallbackWidth;
+  const boundsHeight = bounds.height > 0 ? bounds.height : fallbackHeight;
+  const boundsAspectRatio = boundsWidth / boundsHeight;
+  const targetWidth = boundsAspectRatio > imageAspectRatio
+    ? boundsHeight * imageAspectRatio
+    : boundsWidth;
+  const targetHeight = boundsAspectRatio > imageAspectRatio
+    ? boundsHeight
+    : boundsWidth / imageAspectRatio;
   const edgeScale = Math.min(1, maxPreviewEdge / Math.max(targetWidth, targetHeight));
   const pixelScale = Math.min(1, Math.sqrt(maxPreviewPixels / (targetWidth * targetHeight)));
   const scale = Math.min(edgeScale, pixelScale);
@@ -234,6 +261,12 @@ export function GeneratorPage() {
     storedGeneratorState.depthStrength,
   );
   const [repeatWidth, setRepeatWidth] = useState(storedGeneratorState.repeatWidth);
+  const [animationEnabled, setAnimationEnabled] = useState(
+    storedGeneratorState.animationEnabled,
+  );
+  const [animationSpeed, setAnimationSpeed] = useState(
+    storedGeneratorState.animationSpeed,
+  );
   const [showDepthOverlay, setShowDepthOverlay] = useState(
     storedGeneratorState.showDepthOverlay,
   );
@@ -376,6 +409,8 @@ export function GeneratorPage() {
       exportName,
       depthStrength,
       repeatWidth,
+      animationEnabled,
+      animationSpeed,
       showDepthOverlay,
       depthFileName: depthImageDataUrl ? depthFileName : "",
       depthInferenceMessage: depthImageDataUrl ? depthInferenceMessage : "",
@@ -390,6 +425,8 @@ export function GeneratorPage() {
     depthImageDataUrl,
     depthInferenceMessage,
     depthStrength,
+    animationEnabled,
+    animationSpeed,
     exportName,
     patternFileName,
     patternImageDataUrl,
@@ -601,37 +638,67 @@ export function GeneratorPage() {
       return;
     }
 
-    const timeoutId = window.setTimeout(() => {
-      const frameId = window.requestAnimationFrame(() => {
-        const { width, height } = getPreviewSize(depthImage, previewBounds);
+    let animationFrameId = 0;
+    let animationStartedAt = 0;
+    let previousAnimatedFrameAt = 0;
+    const animatedFrameInterval = 1000 / 12;
 
-        renderStereogram({
-          canvas,
-          depthImage,
-          patternImage,
-          settings: {
-            ...defaultStereogramSettings,
-            width,
-            height,
-            depthStrength,
-            repeatWidth,
-          },
-          showDepthOverlay,
-        });
+    function renderFrame(patternOffset = 0) {
+      if (!canvas || !depthImage || !patternImage) {
+        return;
+      }
+
+      const { width, height } = getPreviewSize(depthImage, previewBounds);
+
+      renderStereogram({
+        canvas,
+        depthImage,
+        patternImage,
+        patternOffsetX: patternOffset,
+        patternOffsetY: patternOffset * 0.35,
+        settings: {
+          ...defaultStereogramSettings,
+          width,
+          height,
+          depthStrength,
+          repeatWidth,
+        },
+        showDepthOverlay,
       });
+    }
 
-      canvas.dataset.renderFrame = String(frameId);
+    function renderAnimatedFrame(timestamp: number) {
+      if (!animationStartedAt) {
+        animationStartedAt = timestamp;
+      }
+
+      if (timestamp - previousAnimatedFrameAt >= animatedFrameInterval) {
+        const elapsedSeconds = (timestamp - animationStartedAt) / 1000;
+        renderFrame(elapsedSeconds * animationSpeed);
+        previousAnimatedFrameAt = timestamp;
+      }
+
+      animationFrameId = window.requestAnimationFrame(renderAnimatedFrame);
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      animationFrameId = window.requestAnimationFrame((timestamp) => {
+        if (animationEnabled) {
+          renderAnimatedFrame(timestamp);
+          return;
+        }
+
+        renderFrame();
+      });
     }, 80);
 
     return () => {
       window.clearTimeout(timeoutId);
-
-      if (canvas.dataset.renderFrame) {
-        window.cancelAnimationFrame(Number(canvas.dataset.renderFrame));
-        delete canvas.dataset.renderFrame;
-      }
+      window.cancelAnimationFrame(animationFrameId);
     };
   }, [
+    animationEnabled,
+    animationSpeed,
     depthImage,
     depthStrength,
     patternImage,
@@ -746,41 +813,44 @@ export function GeneratorPage() {
           </FieldGroup>
 
           <FieldGroup title="Render">
-            <label className={styles.rangeField}>
-              <span className={styles.rangeLabel}>
-                <span>Depth strength</span>
-                <output>{depthStrength}%</output>
-              </span>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={depthStrength}
-                onChange={(event) => setDepthStrength(Number(event.target.value))}
+            <RangeField
+              label="Depth strength"
+              min={0}
+              max={100}
+              value={depthStrength}
+              valueLabel={`${depthStrength}%`}
+              onChange={setDepthStrength}
+            />
+            <RangeField
+              label="Repeat width"
+              min={48}
+              max={240}
+              value={repeatWidth}
+              valueLabel={`${repeatWidth}px`}
+              onChange={setRepeatWidth}
+            />
+            <ToggleField
+              checked={animationEnabled}
+              iconPath={mdiMovieOpenPlayOutline}
+              label="Animate preview"
+              onChange={setAnimationEnabled}
+            />
+            {animationEnabled ? (
+              <RangeField
+                label="Animation speed"
+                min={4}
+                max={120}
+                value={animationSpeed}
+                valueLabel={`${animationSpeed}px/s`}
+                onChange={setAnimationSpeed}
               />
-            </label>
-            <label className={styles.rangeField}>
-              <span className={styles.rangeLabel}>
-                <span>Repeat width</span>
-                <output>{repeatWidth}px</output>
-              </span>
-              <input
-                type="range"
-                min="48"
-                max="240"
-                value={repeatWidth}
-                onChange={(event) => setRepeatWidth(Number(event.target.value))}
-              />
-            </label>
-            <label className={styles.toggleField}>
-              <input
-                type="checkbox"
-                checked={showDepthOverlay}
-                onChange={(event) => setShowDepthOverlay(event.target.checked)}
-              />
-              <span className={styles.toggleSwitch} aria-hidden="true" />
-              <span className={styles.toggleLabel}>Show depth overlay</span>
-            </label>
+            ) : null}
+            <ToggleField
+              checked={showDepthOverlay}
+              iconPath={mdiLayersTripleOutline}
+              label="Show depth overlay"
+              onChange={setShowDepthOverlay}
+            />
           </FieldGroup>
 
           <label className={styles.textField}>

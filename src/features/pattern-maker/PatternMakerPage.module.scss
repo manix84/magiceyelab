@@ -10,10 +10,352 @@
 
 .toolPanel {
   @include mixins.tool-panel;
+  gap: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  scrollbar-gutter: stable;
+
+  > section + section {
+    margin-top: 1rem;
+  }
+
+  > section {
+    border: 1px solid var(--color-border-soft);
+    border-radius: 8px;
+    padding: 1rem;
+    background: var(--color-surface);
+  }
+
+  @media (min-width: 841px) {
+    position: sticky;
+    top: 5.75rem;
+    height: min(calc(100vh - 6.75rem), clamp(24rem, 58vh, 42rem));
+    max-height: min(calc(100vh - 6.75rem), clamp(24rem, 58vh, 42rem));
+    overflow-y: auto;
+    padding-right: 0.15rem;
+
+    &::before,
+    &::after {
+      position: sticky;
+      z-index: 5;
+      display: block;
+      height: 1.75rem;
+      opacity: 0;
+      pointer-events: none;
+      content: "";
+      transition: opacity 120ms ease;
+    }
+
+    &::before {
+      top: 0;
+      margin-bottom: -1.75rem;
+      background: linear-gradient(to bottom, var(--color-page), transparent);
+    }
+
+    &::after {
+      bottom: 0;
+      margin-top: -1.75rem;
+      background: linear-gradient(to top, var(--color-page), transparent);
+    }
+  }
+}
+
+.toolPanelScrolledTop {
+  &::before {
+    opacity: 1;
+  }
+}
+
+.toolPanelScrolledBottom {
+  &::after {
+    opacity: 1;
+  }
+}
+
+.panelHeader {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.panelHeader {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.panelSubheading {
+  color: var(--color-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .segmentedControl {
   @include mixins.segmented-control;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.implementDemo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 7rem;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 7.75rem;
+  overflow: hidden;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 8px;
+  padding: 0.75rem;
+  background:
+    radial-gradient(circle at 72% 50%, rgba(var(--color-accent-rgb), 0.12), transparent 0 3.8rem),
+    linear-gradient(90deg, rgba(var(--color-accent-rgb), 0.08) 1px, transparent 1px),
+    linear-gradient(rgba(var(--color-accent-rgb), 0.08) 1px, transparent 1px),
+    var(--color-surface-subtle);
+  background-size: 12px 12px;
+}
+
+.implementDemoText {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+
+  strong {
+    color: var(--color-label);
+    font-size: 0.9rem;
+    text-transform: capitalize;
+  }
+
+  span {
+    overflow: hidden;
+    color: var(--color-muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.implementDemoPad {
+  position: relative;
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  width: 7rem;
+  height: 4.5rem;
+  overflow: hidden;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 8px;
+  color: var(--implement-demo-color);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--color-border) 34%, transparent) 1px, transparent 1px),
+    linear-gradient(color-mix(in srgb, var(--color-border) 34%, transparent) 1px, transparent 1px),
+    var(--color-surface);
+  background-size: 12px 12px;
+}
+
+.strokeImplementDemo {
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--color-surface-rgb), 0.62),
+    0 2px 8px var(--shadow-soft);
+}
+
+.demoStamp {
+  position: absolute;
+  top: 50%;
+  width: clamp(0.75rem, var(--implement-demo-size), 2.75rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle,
+      var(--implement-demo-color) 0 var(--implement-demo-hardness),
+      color-mix(in srgb, var(--implement-demo-color) 58%, transparent) var(--implement-demo-hardness),
+      transparent 100%
+    );
+  opacity: var(--implement-demo-opacity);
+  transform: translate(-50%, -50%);
+
+  &:nth-child(1) {
+    left: 18%;
+  }
+
+  &:nth-child(2) {
+    left: 29%;
+  }
+
+  &:nth-child(3) {
+    left: 40%;
+  }
+
+  &:nth-child(4) {
+    left: 51%;
+  }
+
+  &:nth-child(5) {
+    left: 62%;
+  }
+
+  &:nth-child(6) {
+    left: 73%;
+  }
+
+  &:nth-child(7) {
+    left: 84%;
+  }
+}
+
+.squareStrokeDemo {
+  .demoStamp {
+    border-radius: 4px;
+    background: var(--implement-demo-color);
+  }
+}
+
+.diamondStrokeDemo {
+  .demoStamp {
+    border-radius: 4px;
+    background: var(--implement-demo-color);
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+}
+
+.lineHorizontalStrokeDemo,
+.lineVerticalStrokeDemo,
+.lineDiagonalStrokeDemo {
+  .demoStamp {
+    height: clamp(0.25rem, calc(var(--implement-demo-size) * 0.28), 0.8rem);
+    border-radius: 999px;
+    background: var(--implement-demo-color);
+  }
+}
+
+.lineVerticalStrokeDemo {
+  .demoStamp {
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+}
+
+.lineDiagonalStrokeDemo {
+  .demoStamp {
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+}
+
+.eraserStrokeDemo {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--color-border) 38%, transparent) 1px, transparent 1px),
+    linear-gradient(color-mix(in srgb, var(--color-border) 38%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, #1d3557, #e63946 28%, #2a9d8f 58%, #f4a261);
+  background-size: 12px 12px, 12px 12px, auto;
+
+  .demoStamp {
+    background:
+      radial-gradient(
+        circle,
+        var(--color-surface) 0 var(--implement-demo-hardness),
+        rgba(var(--color-surface-rgb), 0.72) var(--implement-demo-hardness),
+        transparent 100%
+      );
+  }
+}
+
+.fillImplementDemo {
+  align-content: end;
+  justify-items: start;
+  padding: 0.65rem;
+  color: var(--color-surface);
+  background:
+    linear-gradient(135deg, transparent 0 38%, var(--implement-demo-color) 38% 100%),
+    var(--color-surface);
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--color-surface-rgb), 0.62),
+    0 2px 8px var(--shadow-soft);
+
+  svg {
+    width: 1.35rem;
+    height: 1.35rem;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.26));
+  }
+}
+
+.pickerImplementDemo {
+  color: var(--implement-demo-color);
+  background:
+    radial-gradient(circle at 50% 50%, var(--implement-demo-color) 0 0.55rem, transparent 0.6rem),
+    linear-gradient(90deg, transparent calc(50% - 1px), var(--color-text) 0 calc(50% + 1px), transparent 0),
+    linear-gradient(transparent calc(50% - 1px), var(--color-text) 0 calc(50% + 1px), transparent 0),
+    var(--color-surface);
+  opacity: 1;
+
+  svg {
+    position: absolute;
+    right: 0.65rem;
+    bottom: 0.55rem;
+    width: 1.35rem;
+    height: 1.35rem;
+    color: var(--color-text);
+  }
+}
+
+.shapeControl {
+  @include mixins.segmented-control;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.colorField {
+  display: grid;
+  gap: 0.45rem;
+  color: var(--color-label);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.dualColorField {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: end;
+}
+
+.colorInputGroup {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: center;
+
+  input {
+    width: 100%;
+    min-height: 2.4rem;
+    border: 1px solid var(--color-border-muted);
+    border-radius: 8px;
+    padding: 0 0.75rem;
+    color: var(--color-text);
+    background: var(--color-surface-subtle);
+    font: inherit;
+    font-weight: 700;
+
+    &:focus {
+      border-color: var(--color-accent);
+      outline: 3px solid rgba(var(--color-accent-rgb), 0.16);
+    }
+  }
+}
+
+.colorSwapButton {
+  align-self: end;
+  width: 2.45rem;
+  min-height: 2.4rem;
+  padding: 0;
+}
+
+.currentColor {
+  width: 2.5rem;
+  aspect-ratio: 1;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--color-surface-rgb), 0.58),
+    0 1px 4px var(--shadow-soft);
 }
 
 .paletteRow {
@@ -21,15 +363,79 @@
   grid-template-columns: repeat(5, 1fr);
   gap: 0.45rem;
 
-  button {
+  > button,
+  .paletteSwatch > button:first-child {
     min-height: 2.35rem;
     border-color: var(--color-surface);
     box-shadow: 0 0 0 1px var(--color-border);
+
+    &[aria-pressed="true"] {
+      border-color: var(--color-accent);
+      box-shadow:
+        0 0 0 2px var(--color-surface),
+        0 0 0 4px var(--color-accent);
+    }
   }
+}
+
+.paletteSwatch {
+  position: relative;
+  display: grid;
+  min-width: 0;
+}
+
+.paletteRemoveButton {
+  position: absolute;
+  top: -0.35rem;
+  right: -0.35rem;
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  min-height: 1.25rem;
+  border-radius: 50%;
+  padding: 0;
+  color: var(--color-text);
+  background: var(--color-surface);
+  font-size: 0.9rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.paletteEditorActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
 }
 
 .primaryAction {
   @include mixins.primary-action;
+}
+
+.iconRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.actionStack {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.hiddenInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.transferMessage {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
 }
 
 .previewArea {
@@ -38,16 +444,326 @@
 
 .splitPreview {
   display: grid;
-  grid-template-columns: minmax(14rem, 24rem) minmax(0, 1fr);
-  gap: 1rem;
+  grid-template-columns: minmax(20rem, 36rem) minmax(16rem, 1fr);
+  gap: 1.25rem;
+  align-items: stretch;
 
   > * {
     min-height: clamp(20rem, 50vh, 36rem);
   }
 }
 
+.tileWorkbench {
+  --tile-size: min(32rem, 47vh, calc(100vw - 26rem));
+  --seam-size: min(3.5rem, 5.15vh, calc((100vw - 26rem) * 0.109375));
+  display: grid;
+  grid-template-columns: var(--seam-size) var(--tile-size) var(--seam-size);
+  grid-template-rows: var(--seam-size) var(--tile-size) var(--seam-size);
+  align-content: center;
+  justify-content: center;
+  align-items: stretch;
+  justify-items: stretch;
+  min-width: 0;
+  min-height: clamp(24rem, 58vh, 42rem);
+  overflow: hidden;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 8px;
+  padding: 0.75rem;
+  background:
+    linear-gradient(90deg, rgba(var(--color-accent-rgb), 0.08) 1px, transparent 1px),
+    linear-gradient(rgba(var(--color-accent-rgb), 0.08) 1px, transparent 1px),
+    var(--color-surface);
+  background-size: 24px 24px;
+}
+
+.paintCanvas,
+.topSeam,
+.rightSeam,
+.bottomSeam,
+.leftSeam,
+.repeatPreview {
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  image-rendering: pixelated;
+}
+
+.paintCanvas {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1;
+  background:
+    linear-gradient(45deg, color-mix(in srgb, var(--color-border) 36%, transparent) 25%, transparent 25%),
+    linear-gradient(-45deg, color-mix(in srgb, var(--color-border) 36%, transparent) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, color-mix(in srgb, var(--color-border) 36%, transparent) 75%),
+    linear-gradient(-45deg, transparent 75%, color-mix(in srgb, var(--color-border) 36%, transparent) 75%),
+    var(--color-surface-subtle);
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  background-size: 16px 16px;
+  cursor: crosshair;
+  touch-action: none;
+  z-index: 0;
+}
+
+.canvasCell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 8px;
+  background: var(--color-surface-subtle);
+  box-shadow: 0 10px 28px var(--shadow-soft);
+}
+
+.canvasCellBoundary {
+  border-color: var(--color-accent);
+}
+
+.gridOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(90deg, rgba(var(--color-accent-rgb), 0.18) 1px, transparent 1px),
+    linear-gradient(rgba(var(--color-accent-rgb), 0.18) 1px, transparent 1px);
+  background-size: 6.25% 6.25%;
+}
+
+.tileBoundaryOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border: 2px solid rgba(var(--color-accent-rgb), 0.54);
+  border-radius: 7px;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px var(--color-surface);
+}
+
+.shapePreview {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: visible;
+  color: var(--color-accent);
+  fill-opacity: 0.28;
+  pointer-events: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-opacity: 0.92;
+}
+
+.eraseShapePreview {
+  color: #e63946;
+  mix-blend-mode: multiply;
+}
+
+.brushCursor {
+  position: absolute;
+  top: var(--brush-cursor-y);
+  left: var(--brush-cursor-x);
+  z-index: 4;
+  width: var(--brush-cursor-size);
+  min-width: 0.5rem;
+  aspect-ratio: 1;
+  border: 2px solid var(--brush-cursor-color);
+  border-radius: 50%;
+  color: var(--brush-cursor-color);
+  background: color-mix(in srgb, var(--brush-cursor-color) 16%, transparent);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  box-shadow:
+    0 0 0 1px var(--color-text),
+    0 0 0 3px var(--color-surface),
+    0 0 16px color-mix(in srgb, var(--brush-cursor-color) 34%, transparent);
+}
+
+.brushCursorLabel {
+  position: absolute;
+  bottom: calc(100% + 0.4rem);
+  left: 50%;
+  width: max-content;
+  max-width: 8rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0.2rem 0.45rem;
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  box-shadow: 0 2px 8px var(--shadow-soft);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.iconBrushCursor {
+  width: 0.75rem;
+  min-width: 0.75rem;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+
+  &::before,
+  &::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    content: "";
+    transform: translate(-50%, -50%);
+  }
+
+  &::before {
+    width: 0.55rem;
+    aspect-ratio: 1;
+    border: 2px solid var(--brush-cursor-color);
+    border-radius: 50%;
+    background: var(--color-surface);
+    box-shadow:
+      0 0 0 1px var(--color-text),
+      0 0 0 3px var(--color-surface);
+  }
+
+  &::after {
+    width: 1.05rem;
+    height: 1.05rem;
+    background:
+      linear-gradient(var(--brush-cursor-color), var(--brush-cursor-color)) center / 100% 2px no-repeat,
+      linear-gradient(var(--brush-cursor-color), var(--brush-cursor-color)) center / 2px 100% no-repeat;
+  }
+}
+
+.brushCursorIcon {
+  position: absolute;
+  top: 0.65rem;
+  left: 0.75rem;
+  display: grid;
+  place-items: center;
+  width: 2.15rem;
+  aspect-ratio: 1;
+  border: 1px solid var(--brush-cursor-color);
+  border-radius: 999px;
+  color: var(--brush-cursor-color);
+  background: color-mix(in srgb, var(--color-surface) 86%, transparent);
+  box-shadow: 0 2px 8px var(--shadow-soft);
+
+  svg {
+    filter:
+      drop-shadow(0 0 1px var(--color-surface))
+      drop-shadow(0 1px 2px var(--shadow-soft));
+  }
+}
+
+.iconBrushCursor .brushCursorLabel {
+  display: none;
+}
+
+.squareBrushCursor {
+  border-radius: 3px;
+}
+
+.diamondBrushCursor {
+  border-radius: 3px;
+  transform: translate(-50%, -50%) rotate(45deg);
+
+  .brushCursorLabel {
+    transform: translateX(-50%) rotate(-45deg);
+  }
+}
+
+.lineHorizontalBrushCursor,
+.lineVerticalBrushCursor,
+.lineDiagonalBrushCursor {
+  height: max(0.3rem, calc(var(--brush-cursor-size) * 0.28));
+  border-radius: 999px;
+}
+
+.lineVerticalBrushCursor {
+  transform: translate(-50%, -50%) rotate(90deg);
+
+  .brushCursorLabel {
+    transform: translateX(-50%) rotate(-90deg);
+  }
+}
+
+.lineDiagonalBrushCursor {
+  transform: translate(-50%, -50%) rotate(-45deg);
+
+  .brushCursorLabel {
+    transform: translateX(-50%) rotate(45deg);
+  }
+}
+
+.eraserBrushCursor {
+  border-style: dashed;
+}
+
+.topSeam,
+.bottomSeam {
+  width: 100%;
+  height: 100%;
+  border-inline: 1px solid rgba(var(--color-accent-rgb), 0.22);
+}
+
+.leftSeam,
+.rightSeam {
+  width: 100%;
+  height: 100%;
+  border-block: 1px solid rgba(var(--color-accent-rgb), 0.22);
+}
+
+.topSeam {
+  border-radius: 8px 8px 0 0;
+}
+
+.rightSeam {
+  border-radius: 0 8px 8px 0;
+}
+
+.bottomSeam {
+  border-radius: 0 0 8px 8px;
+}
+
+.leftSeam {
+  border-radius: 8px 0 0 8px;
+}
+
+.tileCorner {
+  border: 1px solid rgba(var(--color-accent-rgb), 0.12);
+  background:
+    linear-gradient(135deg, rgba(var(--color-accent-rgb), 0.1), transparent 58%),
+    rgba(var(--color-surface-rgb), 0.72);
+}
+
+.repeatPreview {
+  align-self: center;
+  justify-self: center;
+  width: min(100%, clamp(20rem, 50vh, 36rem));
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 1;
+  border: 1px solid var(--color-preview-border);
+  border-radius: 8px;
+  background: var(--color-preview);
+}
+
 @media (max-width: 840px) {
   .splitPreview {
     grid-template-columns: 1fr;
+  }
+
+  .tileWorkbench {
+    --tile-size: min(28rem, 47vh, calc(100vw - 2rem));
+    --seam-size: min(3.0625rem, 5.15vh, calc((100vw - 2rem) * 0.109375));
   }
 }

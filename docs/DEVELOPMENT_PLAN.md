@@ -68,6 +68,7 @@ Allow users to paint their own grayscale depth map inside the app.
 - Clear canvas
 - Import image as depth map
 - Export depth map as image
+- Restore in-progress controls and draft state locally after navigation
 
 ### Depth Rules
 
@@ -97,13 +98,38 @@ Allow users to create a seamless repeating pattern directly in the browser.
 
 - Canvas-based pattern drawing
 - Pixel-style brush
-- Eraser
+- Pixel-snapped hard-edged pencil tool
+- Transparent eraser with brush-style size, opacity, flow, hardness, and spacing
+- Fill tool with contiguous/global modes and tolerance control
+- Shape tool with line, rectangle, and ellipse modes
+- Eyedropper
 - Colour picker
-- Palette support
-- Seamless tile preview
+- Palette support with hex entry and recent colours
+- Primary/secondary colour selectors with quick swap
+- Editable de-duplicated palette controls
+- Adjustable brush size
+- Adjustable brush opacity
+- Adjustable brush flow, hardness, and spacing
+- Shared pencil/brush/eraser tip shape controls
+- Stamp-based brush interpolation with per-stroke opacity clamping
+- Pixel-snapped pencil stamping with no anti-aliasing or soft opacity buildup
+- Destination-out eraser stamping with transparent output and checkerboard editing feedback
+- Shape stroke/fill controls with paint and erase blend modes
+- Circle, square, diamond, horizontal line, vertical line, and diagonal line tip shapes
+- Colour-aware brush, fill, and eyedropper previews
+- Optional grid overlay
+- Optional tile boundary guide
+- Stroke-based undo / redo
+- Keyboard shortcuts for pencil, brush, eraser, fill, eyedropper, undo, and redo
+- Seamless tile preview with opposite-edge strips around the active painting tile
+- Wraparound painting across tile boundaries and corners
+- Repeated pattern preview that shows several tiled copies at once
 - Import pattern image
 - Export pattern image
-- Random pattern generator
+- Clear pattern tile
+- Send created patterns to the Generator and edit the Generator's current pattern
+- Random pattern generator that creates wrapped motifs so generated tiles repeat cleanly
+- Restore in-progress pattern drafts and tool settings locally after navigation
 
 ### Nice To Have
 
@@ -222,9 +248,31 @@ Users can paint their own hidden image and generate a stereogram from it.
 - Add pattern drawing canvas
 - Add colour picker
 - Add palette
-- Add brush and eraser tools
-- Add seamless tile preview
-- Add random pattern generator
+- Add pixel-snapped pencil, brush, and transparent eraser tools
+- Add fill tool with contiguous/global modes and tolerance control
+- Add shape tool for line, rectangle, and ellipse drawing
+- Add eyedropper colour picking
+- Add hex colour entry and recent colour swatches
+- Add primary/secondary colour selectors with quick swap
+- Add editable de-duplicated palette controls
+- Add brush size controls
+- Add brush opacity, flow, hardness, spacing, and shared tip shape controls
+- Add stamp-based brush interpolation with a temporary stroke buffer
+- Add pixel-snapped pencil stamping with no anti-aliasing or soft opacity buildup
+- Add destination-out eraser stamping with transparent output and checkerboard editing feedback
+- Add shape stroke/fill controls with paint and erase blend modes
+- Add circle, square, diamond, horizontal line, vertical line, and diagonal line tip shapes
+- Add colour-aware brush, fill, and eyedropper previews on the canvas
+- Add optional grid overlay
+- Add optional tile boundary guide
+- Add undo / redo
+- Add keyboard shortcuts for core tools
+- Add local draft restore for controls and painted work
+- Add seamless tile preview with live opposite-edge references
+- Add wraparound painting for strokes that cross tile boundaries
+- Add random pattern generator that draws wrapped seamless shapes
+- Add pattern image import, PNG export, and clear tile controls
+- Add Pattern Maker / Generator handoff
 - Add export pattern
 - Connect created pattern to generator
 
