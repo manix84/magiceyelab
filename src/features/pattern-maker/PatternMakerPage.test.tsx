@@ -9,6 +9,7 @@ function createCanvasContextMock() {
     beginPath: vi.fn(),
     arc: vi.fn(),
     clearRect: vi.fn(),
+    createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
     createPattern: vi.fn(() => ({})),
     drawImage: vi.fn(),
     fill: vi.fn(),
@@ -18,9 +19,9 @@ function createCanvasContextMock() {
       const height = args[3] ?? 1;
 
       return {
-      data: new Uint8ClampedArray(width * height * 4),
-      height,
-      width,
+        data: new Uint8ClampedArray(width * height * 4),
+        height,
+        width,
       };
     }),
     lineTo: vi.fn(),
@@ -107,31 +108,46 @@ describe("PatternMakerPage", () => {
     expect(context.fillRect).toHaveBeenCalled();
   });
 
-  it("supports pencil, brush settings, display toggles, and history controls", async () => {
+  it("shows relevant implement controls for each tool", async () => {
     const user = userEvent.setup();
     renderPatternMakerPage();
 
+    expect(screen.getByRole("slider", { name: "Brush size" })).toHaveValue("36");
+    expect(screen.getByRole("slider", { name: "Brush opacity" })).toHaveValue("100");
+    expect(screen.getByRole("slider", { name: "Brush flow" })).toHaveValue("35");
+    expect(screen.getByRole("slider", { name: "Brush hardness" })).toHaveValue("25");
+    expect(screen.getByRole("slider", { name: "Brush spacing" })).toHaveValue("8");
+    expect(screen.getByRole("button", { name: "Square" })).toBeInTheDocument();
+    expect(screen.queryByRole("slider", { name: "Fill tolerance" })).not.toBeInTheDocument();
+
     await user.click(screen.getByRole("button", { name: "Pencil" }));
-    await user.click(screen.getByRole("button", { name: "Square" }));
-    await user.click(screen.getByRole("button", { name: "Global" }));
-    await user.click(screen.getByLabelText("Show grid"));
-    await user.click(screen.getByLabelText("Show boundary"));
 
     expect(screen.getByRole("button", { name: "Pencil" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
     expect(screen.getByRole("slider", { name: "Brush size" })).toHaveValue("36");
-    expect(screen.getByRole("slider", { name: "Brush opacity" })).toHaveValue("100");
+    expect(screen.queryByRole("slider", { name: "Brush opacity" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Square" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Fill" }));
+    await user.click(screen.getByRole("button", { name: "Global" }));
+
     expect(screen.getByRole("slider", { name: "Fill tolerance" })).toHaveValue("8");
-    expect(screen.getByRole("button", { name: "Square" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
     expect(screen.getByRole("button", { name: "Global" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
+    expect(screen.queryByRole("slider", { name: "Brush size" })).not.toBeInTheDocument();
+  });
+
+  it("supports display toggles and history controls", async () => {
+    const user = userEvent.setup();
+    renderPatternMakerPage();
+
+    await user.click(screen.getByLabelText("Show grid"));
+    await user.click(screen.getByLabelText("Show boundary"));
+
     expect(screen.getByLabelText("Show grid")).not.toBeChecked();
     expect(screen.getByLabelText("Show boundary")).not.toBeChecked();
     expect(screen.getByRole("button", { name: "Undo" })).toBeDisabled();

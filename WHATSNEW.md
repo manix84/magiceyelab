@@ -7,7 +7,7 @@
 - Added Fill mode with contiguous/global fill options and tolerance control.
 - Added Eyedropper mode for picking colours from the tile.
 - Added adjustable brush size.
-- Added brush opacity and circle/square shape controls.
+- Added stamp-based brush painting with opacity, flow, hardness, spacing, and circle/square shape controls.
 - Added colour-aware brush, fill, and eyedropper previews in the controls and over the paint tile.
 - Added an optional grid overlay for precise tile work.
 - Added an optional tile boundary guide.

@@ -75,42 +75,135 @@
 }
 
 .implementDemoPad {
+  position: relative;
   display: grid;
   place-items: center;
   justify-self: center;
-  width: var(--implement-demo-size);
-  max-width: 6rem;
+  width: 7rem;
+  height: 4.5rem;
+  overflow: hidden;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 8px;
+  color: var(--implement-demo-color);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--color-border) 34%, transparent) 1px, transparent 1px),
+    linear-gradient(color-mix(in srgb, var(--color-border) 34%, transparent) 1px, transparent 1px),
+    var(--color-surface);
+  background-size: 12px 12px;
+}
+
+.strokeImplementDemo {
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--color-surface-rgb), 0.62),
+    0 2px 8px var(--shadow-soft);
+}
+
+.demoStamp {
+  position: absolute;
+  top: 50%;
+  width: clamp(0.75rem, var(--implement-demo-size), 2.75rem);
   aspect-ratio: 1;
   border-radius: 50%;
-  color: var(--implement-demo-color);
-}
-
-.paintImplementDemo {
-  background: var(--implement-demo-color);
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--implement-demo-color) 34%, transparent);
+  background:
+    radial-gradient(
+      circle,
+      var(--implement-demo-color) 0 var(--implement-demo-hardness),
+      color-mix(in srgb, var(--implement-demo-color) 58%, transparent) var(--implement-demo-hardness),
+      transparent 100%
+    );
   opacity: var(--implement-demo-opacity);
+  transform: translate(-50%, -50%);
+
+  &:nth-child(1) {
+    left: 18%;
+  }
+
+  &:nth-child(2) {
+    left: 29%;
+  }
+
+  &:nth-child(3) {
+    left: 40%;
+  }
+
+  &:nth-child(4) {
+    left: 51%;
+  }
+
+  &:nth-child(5) {
+    left: 62%;
+  }
+
+  &:nth-child(6) {
+    left: 73%;
+  }
+
+  &:nth-child(7) {
+    left: 84%;
+  }
 }
 
-.squareImplementDemo {
-  border-radius: 4px;
+.squareStrokeDemo {
+  .demoStamp {
+    border-radius: 4px;
+    background: var(--implement-demo-color);
+  }
 }
 
-.iconImplementDemo {
-  width: 3rem;
-  max-width: 3rem;
-  border: 2px solid var(--implement-demo-color);
-  background: color-mix(in srgb, var(--implement-demo-color) 14%, transparent);
+.eraserStrokeDemo {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--color-border) 38%, transparent) 1px, transparent 1px),
+    linear-gradient(color-mix(in srgb, var(--color-border) 38%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, #1d3557, #e63946 28%, #2a9d8f 58%, #f4a261);
+  background-size: 12px 12px, 12px 12px, auto;
+
+  .demoStamp {
+    background:
+      radial-gradient(
+        circle,
+        var(--color-surface) 0 var(--implement-demo-hardness),
+        rgba(var(--color-surface-rgb), 0.72) var(--implement-demo-hardness),
+        transparent 100%
+      );
+  }
+}
+
+.fillImplementDemo {
+  align-content: end;
+  justify-items: start;
+  padding: 0.65rem;
+  color: var(--color-surface);
+  background:
+    linear-gradient(135deg, transparent 0 38%, var(--implement-demo-color) 38% 100%),
+    var(--color-surface);
   box-shadow:
-    0 0 0 1px var(--color-text),
-    0 0 0 3px var(--color-surface),
-    0 0 18px color-mix(in srgb, var(--implement-demo-color) 28%, transparent);
-}
-
-.eraserImplementDemo {
-  box-shadow:
-    inset 0 0 0 1px var(--color-border),
+    inset 0 0 0 1px rgba(var(--color-surface-rgb), 0.62),
     0 2px 8px var(--shadow-soft);
+
+  svg {
+    width: 1.35rem;
+    height: 1.35rem;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.26));
+  }
+}
+
+.pickerImplementDemo {
+  color: var(--implement-demo-color);
+  background:
+    radial-gradient(circle at 50% 50%, var(--implement-demo-color) 0 0.55rem, transparent 0.6rem),
+    linear-gradient(90deg, transparent calc(50% - 1px), var(--color-text) 0 calc(50% + 1px), transparent 0),
+    linear-gradient(transparent calc(50% - 1px), var(--color-text) 0 calc(50% + 1px), transparent 0),
+    var(--color-surface);
   opacity: 1;
+
+  svg {
+    position: absolute;
+    right: 0.65rem;
+    bottom: 0.55rem;
+    width: 1.35rem;
+    height: 1.35rem;
+    color: var(--color-text);
+  }
 }
 
 .shapeControl {

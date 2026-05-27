@@ -40,6 +40,9 @@ const tileSize = 512;
 const seamSize = 56;
 const repeatPreviewTileSize = 160;
 const defaultBrushSize = 36;
+const defaultBrushHardness = 25;
+const defaultBrushFlow = 35;
+const defaultBrushSpacing = 8;
 const maxHistoryStates = 24;
 const acceptedPatternTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 type PatternTool = "pencil" | "brush" | "eraser" | "eyedropper" | "fill";
@@ -49,6 +52,9 @@ type CanvasPoint = {
   x: number;
   y: number;
 };
+type StrokePoint = CanvasPoint & {
+  pressure: number;
+};
 type BrushCursorStyle = CSSProperties & {
   "--brush-cursor-color": string;
   "--brush-cursor-size": string;
@@ -57,6 +63,7 @@ type BrushCursorStyle = CSSProperties & {
 };
 type ImplementDemoStyle = CSSProperties & {
   "--implement-demo-color": string;
+  "--implement-demo-hardness": string;
   "--implement-demo-opacity": number;
   "--implement-demo-size": string;
 };
@@ -81,6 +88,9 @@ type StoredPatternMakerState = {
   brushShape: BrushShape;
   brushSize: number;
   brushOpacity: number;
+  brushHardness: number;
+  brushFlow: number;
+  brushSpacing: number;
   fillMode: FillMode;
   fillTolerance: number;
   showGrid: boolean;
@@ -108,6 +118,9 @@ const defaultPatternMakerState: StoredPatternMakerState = {
   brushShape: "circle",
   brushSize: defaultBrushSize,
   brushOpacity: 100,
+  brushHardness: defaultBrushHardness,
+  brushFlow: defaultBrushFlow,
+  brushSpacing: defaultBrushSpacing,
   fillMode: "contiguous",
   fillTolerance: 8,
   showGrid: true,
@@ -127,6 +140,18 @@ function getCanvasPoint(
   };
 }
 
+function getStrokePoint(
+  event: PointerEvent<HTMLCanvasElement>,
+  canvas: HTMLCanvasElement,
+): StrokePoint {
+  const point = getCanvasPoint(event, canvas);
+  const pressure = event.pointerType === "pen"
+    ? Math.max(event.pressure || 0, 0.05)
+    : 1;
+
+  return { ...point, pressure };
+}
+
 function drawWrappedCircle(
   context: CanvasRenderingContext2D,
   x: number,
@@ -138,26 +163,6 @@ function drawWrappedCircle(
       context.beginPath();
       context.arc(x + offsetX, y + offsetY, radius, 0, Math.PI * 2);
       context.fill();
-    }
-  }
-}
-
-function drawWrappedSquare(
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  size: number,
-) {
-  const halfSize = size / 2;
-
-  for (const offsetX of [-tileSize, 0, tileSize]) {
-    for (const offsetY of [-tileSize, 0, tileSize]) {
-      context.fillRect(
-        Math.round(x + offsetX - halfSize),
-        Math.round(y + offsetY - halfSize),
-        size,
-        size,
-      );
     }
   }
 }
@@ -263,6 +268,24 @@ function readStoredPatternMakerState(): StoredPatternMakerState {
         100,
         defaultPatternMakerState.brushOpacity,
       ),
+      brushHardness: clampNumber(
+        parsedValue.brushHardness,
+        0,
+        100,
+        defaultPatternMakerState.brushHardness,
+      ),
+      brushFlow: clampNumber(
+        parsedValue.brushFlow,
+        1,
+        100,
+        defaultPatternMakerState.brushFlow,
+      ),
+      brushSpacing: clampNumber(
+        parsedValue.brushSpacing,
+        5,
+        100,
+        defaultPatternMakerState.brushSpacing,
+      ),
       fillMode: parsedValue.fillMode === "global" ? "global" as const : "contiguous" as const,
       fillTolerance: clampNumber(
         parsedValue.fillTolerance,
@@ -319,6 +342,12 @@ function formatColorComponent(value: number) {
 
 function rgbToHex(red: number, green: number, blue: number) {
   return `#${formatColorComponent(red)}${formatColorComponent(green)}${formatColorComponent(blue)}`;
+}
+
+function hexToRgba(value: string, alpha: number) {
+  const color = hexToRgb(value);
+
+  return `rgba(${color.red}, ${color.green}, ${color.blue}, ${alpha})`;
 }
 
 function normaliseHexColor(value: string) {
@@ -392,6 +421,13 @@ export function PatternMakerPage() {
   const [brushOpacity, setBrushOpacity] = useState(
     storedPatternMakerState.brushOpacity,
   );
+  const [brushHardness, setBrushHardness] = useState(
+    storedPatternMakerState.brushHardness,
+  );
+  const [brushFlow, setBrushFlow] = useState(storedPatternMakerState.brushFlow);
+  const [brushSpacing, setBrushSpacing] = useState(
+    storedPatternMakerState.brushSpacing,
+  );
   const [fillMode, setFillMode] = useState<FillMode>(
     storedPatternMakerState.fillMode,
   );
@@ -414,7 +450,10 @@ export function PatternMakerPage() {
   const leftSeamRef = useRef<HTMLCanvasElement>(null);
   const repeatPreviewRef = useRef<HTMLCanvasElement>(null);
   const isPaintingRef = useRef(false);
-  const lastPointRef = useRef<CanvasPoint | null>(null);
+  const lastPointRef = useRef<StrokePoint | null>(null);
+  const strokeBaseRef = useRef<ImageData | null>(null);
+  const strokeCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const strokeContextRef = useRef<CanvasRenderingContext2D | null>(null);
   const undoStackRef = useRef<ImageData[]>([]);
   const redoStackRef = useRef<ImageData[]>([]);
   const importInputRef = useRef<HTMLInputElement>(null);
@@ -451,6 +490,9 @@ export function PatternMakerPage() {
       brushShape,
       brushSize,
       brushOpacity,
+      brushHardness,
+      brushFlow,
+      brushSpacing,
       fillMode,
       fillTolerance,
       showGrid,
@@ -645,31 +687,88 @@ export function PatternMakerPage() {
     return brushShape;
   }
 
-  function paintStamp(context: CanvasRenderingContext2D, point: CanvasPoint) {
-    context.fillStyle = selectedTool === "eraser" ? "#f7f5ef" : selectedColor;
-    context.globalAlpha = selectedTool === "pencil" ? 1 : brushOpacity / 100;
+  function getStampSettings(point: StrokePoint) {
+    const pressure = Number.isFinite(point.pressure) ? point.pressure : 1;
+
+    return {
+      color: selectedTool === "eraser" ? "#f7f5ef" : selectedColor,
+      flow: selectedTool === "pencil" ? 1 : (brushFlow / 100) * pressure,
+      hardness: selectedTool === "pencil" ? 1 : brushHardness / 100,
+      shape: getActiveBrushShape(),
+      size: selectedTool === "pencil" ? brushSize : brushSize * pressure,
+    };
+  }
+
+  function paintStamp(context: CanvasRenderingContext2D, point: StrokePoint) {
+    const stamp = getStampSettings(point);
+    context.globalAlpha = stamp.flow;
 
     try {
-      if (getActiveBrushShape() === "square") {
-        drawWrappedSquare(context, point.x, point.y, brushSize);
-        return;
-      }
+      for (const offsetX of [-tileSize, 0, tileSize]) {
+        for (const offsetY of [-tileSize, 0, tileSize]) {
+          const x = point.x + offsetX;
+          const y = point.y + offsetY;
 
-      drawWrappedCircle(context, point.x, point.y, brushSize / 2);
+          if (stamp.shape === "square") {
+            const halfSize = stamp.size / 2;
+            context.fillStyle = stamp.color;
+            context.fillRect(
+              Math.round(x - halfSize),
+              Math.round(y - halfSize),
+              stamp.size,
+              stamp.size,
+            );
+            continue;
+          }
+
+          const radius = stamp.size / 2;
+          context.beginPath();
+          context.arc(x, y, radius, 0, Math.PI * 2);
+
+          if (stamp.hardness >= 0.98) {
+            context.fillStyle = stamp.color;
+          } else {
+            const gradient = context.createRadialGradient(x, y, 0, x, y, radius);
+            gradient.addColorStop(0, stamp.color);
+            gradient.addColorStop(Math.max(0, stamp.hardness), stamp.color);
+            gradient.addColorStop(1, hexToRgba(stamp.color, 0));
+            context.fillStyle = gradient;
+          }
+
+          context.fill();
+        }
+      }
     } finally {
       context.globalAlpha = 1;
     }
   }
 
-  function paintAt(event: PointerEvent<HTMLCanvasElement>) {
+  function compositeStrokeToCanvas() {
     const canvas = paintCanvasRef.current;
     const context = canvas?.getContext("2d");
+    const strokeBase = strokeBaseRef.current;
+    const strokeCanvas = strokeCanvasRef.current;
+
+    if (!canvas || !context || !strokeBase || !strokeCanvas) {
+      return;
+    }
+
+    context.putImageData(strokeBase, 0, 0);
+    context.globalAlpha = selectedTool === "pencil" ? 1 : brushOpacity / 100;
+    context.drawImage(strokeCanvas, 0, 0);
+    context.globalAlpha = 1;
+    renderPatternPreviews();
+  }
+
+  function paintAt(event: PointerEvent<HTMLCanvasElement>) {
+    const canvas = paintCanvasRef.current;
+    const context = strokeContextRef.current;
 
     if (!canvas || !context) {
       return;
     }
 
-    const point = getCanvasPoint(event, canvas);
+    const point = getStrokePoint(event, canvas);
     const lastPoint = lastPointRef.current;
 
     if (!lastPoint) {
@@ -680,7 +779,10 @@ export function PatternMakerPage() {
     }
 
     const distance = Math.hypot(point.x - lastPoint.x, point.y - lastPoint.y);
-    const spacing = Math.max(2, brushSize * (selectedTool === "pencil" ? 0.8 : 0.35));
+    const spacing = Math.max(
+      1,
+      brushSize * (selectedTool === "pencil" ? 0.18 : brushSpacing / 100),
+    );
     const steps = Math.max(1, Math.ceil(distance / spacing));
 
     for (let step = 1; step <= steps; step += 1) {
@@ -688,11 +790,12 @@ export function PatternMakerPage() {
       paintStamp(context, {
         x: lastPoint.x + (point.x - lastPoint.x) * progress,
         y: lastPoint.y + (point.y - lastPoint.y) * progress,
+        pressure: lastPoint.pressure + (point.pressure - lastPoint.pressure) * progress,
       });
     }
 
     lastPointRef.current = point;
-    renderPatternPreviews();
+    compositeStrokeToCanvas();
   }
 
   function pickColorAt(event: PointerEvent<HTMLCanvasElement>) {
@@ -842,6 +945,19 @@ export function PatternMakerPage() {
     }
 
     pushUndoState();
+    const baseSnapshot = captureCanvasState();
+    const strokeCanvas = document.createElement("canvas");
+    const strokeContext = strokeCanvas.getContext("2d");
+
+    if (!baseSnapshot || !strokeContext) {
+      return;
+    }
+
+    strokeCanvas.width = tileSize;
+    strokeCanvas.height = tileSize;
+    strokeBaseRef.current = baseSnapshot;
+    strokeCanvasRef.current = strokeCanvas;
+    strokeContextRef.current = strokeContext;
     isPaintingRef.current = true;
     lastPointRef.current = null;
     paintAt(event);
@@ -862,6 +978,10 @@ export function PatternMakerPage() {
 
     isPaintingRef.current = false;
     lastPointRef.current = null;
+    compositeStrokeToCanvas();
+    strokeBaseRef.current = null;
+    strokeCanvasRef.current = null;
+    strokeContextRef.current = null;
     writePatternMakerDraft();
   }
 
@@ -1154,6 +1274,10 @@ export function PatternMakerPage() {
   }, []);
 
   const activeBrushShape = getActiveBrushShape();
+  const usesBrushStamp = ["brush", "eraser", "pencil"].includes(selectedTool);
+  const usesSoftBrushControls = selectedTool === "brush" || selectedTool === "eraser";
+  const usesBrushShapeControl = selectedTool === "brush" || selectedTool === "eraser";
+  const usesFillControls = selectedTool === "fill";
   const activeCursorColor = selectedTool === "eyedropper"
     ? hoverSampleColor
     : selectedTool === "eraser"
@@ -1166,6 +1290,7 @@ export function PatternMakerPage() {
       : null;
   const implementDemoStyle: ImplementDemoStyle = {
     "--implement-demo-color": activeCursorColor,
+    "--implement-demo-hardness": `${brushHardness}%`,
     "--implement-demo-opacity": selectedTool === "pencil" ? 1 : brushOpacity / 100,
     "--implement-demo-size": `${Math.max(8, brushSize)}px`,
   };
@@ -1242,73 +1367,181 @@ export function PatternMakerPage() {
             </div>
           </FieldGroup>
 
-          <FieldGroup title="Brush">
-            {!cursorIconPath ? (
-              <div
-                className={styles.implementDemo}
-                aria-label={`${selectedTool} implement preview`}
-                style={implementDemoStyle}
-              >
-                <span className={styles.implementDemoText}>
-                  <strong>{selectedTool}</strong>
-                  <span>{`${brushSize}px ${activeBrushShape}`}</span>
+          <FieldGroup title="Implement">
+            <div
+              className={styles.implementDemo}
+              aria-label={`${selectedTool} implement preview`}
+              style={implementDemoStyle}
+            >
+              <span className={styles.implementDemoText}>
+                <strong>{selectedTool}</strong>
+                <span>
+                  {usesBrushStamp
+                    ? `${brushSize}px ${activeBrushShape}${usesSoftBrushControls ? ` / ${brushFlow}% flow` : ""}`
+                    : selectedTool === "fill"
+                      ? `${fillMode} fill / tolerance ${fillTolerance}`
+                      : "sample exact pixel colour"}
                 </span>
-                <span
-                  className={classNames(styles.implementDemoPad, {
-                    [styles.paintImplementDemo]: true,
-                    [styles.squareImplementDemo]: activeBrushShape === "square",
-                    [styles.eraserImplementDemo]: selectedTool === "eraser",
-                  })}
-                  aria-hidden="true"
+              </span>
+              <span
+                className={classNames(styles.implementDemoPad, {
+                  [styles.strokeImplementDemo]: usesBrushStamp,
+                  [styles.squareStrokeDemo]: usesBrushStamp && activeBrushShape === "square",
+                  [styles.eraserStrokeDemo]: selectedTool === "eraser",
+                  [styles.fillImplementDemo]: selectedTool === "fill",
+                  [styles.pickerImplementDemo]: selectedTool === "eyedropper",
+                })}
+                aria-hidden="true"
+              >
+                {usesBrushStamp ? (
+                  <>
+                    {Array.from({ length: 7 }, (_, index) => (
+                      <span className={styles.demoStamp} key={index} />
+                    ))}
+                  </>
+                ) : cursorIconPath ? (
+                  <MdiIcon path={cursorIconPath} />
+                ) : null}
+              </span>
+            </div>
+            {usesBrushStamp ? (
+              <label className={styles.rangeField}>
+                <span className={styles.rangeLabel}>
+                  <span>Size</span>
+                  <output>{brushSize}px</output>
+                </span>
+                <input
+                  type="range"
+                  aria-label="Brush size"
+                  min="4"
+                  max="96"
+                  value={brushSize}
+                  onChange={(event) => setBrushSize(Number(event.target.value))}
                 />
+              </label>
+            ) : null}
+            {usesSoftBrushControls ? (
+              <>
+                <label className={styles.rangeField}>
+                  <span className={styles.rangeLabel}>
+                    <span>Opacity</span>
+                    <output>{brushOpacity}%</output>
+                  </span>
+                  <input
+                    type="range"
+                    aria-label="Brush opacity"
+                    min="10"
+                    max="100"
+                    value={brushOpacity}
+                    onChange={(event) => setBrushOpacity(Number(event.target.value))}
+                  />
+                </label>
+                <label className={styles.rangeField}>
+                  <span className={styles.rangeLabel}>
+                    <span>Flow</span>
+                    <output>{brushFlow}%</output>
+                  </span>
+                  <input
+                    type="range"
+                    aria-label="Brush flow"
+                    min="1"
+                    max="100"
+                    value={brushFlow}
+                    onChange={(event) => setBrushFlow(Number(event.target.value))}
+                  />
+                </label>
+                <label className={styles.rangeField}>
+                  <span className={styles.rangeLabel}>
+                    <span>Hardness</span>
+                    <output>{brushHardness}%</output>
+                  </span>
+                  <input
+                    type="range"
+                    aria-label="Brush hardness"
+                    min="0"
+                    max="100"
+                    value={brushHardness}
+                    onChange={(event) => setBrushHardness(Number(event.target.value))}
+                  />
+                </label>
+                <label className={styles.rangeField}>
+                  <span className={styles.rangeLabel}>
+                    <span>Spacing</span>
+                    <output>{brushSpacing}%</output>
+                  </span>
+                  <input
+                    type="range"
+                    aria-label="Brush spacing"
+                    min="5"
+                    max="100"
+                    value={brushSpacing}
+                    onChange={(event) => setBrushSpacing(Number(event.target.value))}
+                  />
+                </label>
+              </>
+            ) : null}
+            {usesBrushShapeControl ? (
+              <div className={styles.shapeControl} aria-label="Brush shape">
+                <button
+                  type="button"
+                  aria-pressed={brushShape === "circle"}
+                  onClick={() => setBrushShape("circle")}
+                >
+                  <MdiIcon path={mdiShapeCirclePlus} />
+                  Circle
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={brushShape === "square"}
+                  onClick={() => setBrushShape("square")}
+                >
+                  <MdiIcon path={mdiShapeSquarePlus} />
+                  Square
+                </button>
               </div>
             ) : null}
-            <label className={styles.rangeField}>
-              <span className={styles.rangeLabel}>
-                <span>Size</span>
-                <output>{brushSize}px</output>
-              </span>
-              <input
-                type="range"
-                aria-label="Brush size"
-                min="4"
-                max="96"
-                value={brushSize}
-                onChange={(event) => setBrushSize(Number(event.target.value))}
-              />
-            </label>
-            <label className={styles.rangeField}>
-              <span className={styles.rangeLabel}>
-                <span>Opacity</span>
-                <output>{brushOpacity}%</output>
-              </span>
-              <input
-                type="range"
-                aria-label="Brush opacity"
-                min="10"
-                max="100"
-                value={brushOpacity}
-                onChange={(event) => setBrushOpacity(Number(event.target.value))}
-              />
-            </label>
-            <div className={styles.shapeControl} aria-label="Brush shape">
-              <button
-                type="button"
-                aria-pressed={brushShape === "circle"}
-                onClick={() => setBrushShape("circle")}
-              >
-                <MdiIcon path={mdiShapeCirclePlus} />
-                Circle
-              </button>
-              <button
-                type="button"
-                aria-pressed={brushShape === "square"}
-                onClick={() => setBrushShape("square")}
-              >
-                <MdiIcon path={mdiShapeSquarePlus} />
-                Square
-              </button>
-            </div>
+            {usesFillControls ? (
+              <>
+                <div className={styles.shapeControl} aria-label="Fill mode">
+                  <button
+                    type="button"
+                    aria-pressed={fillMode === "contiguous"}
+                    onClick={() => setFillMode("contiguous")}
+                  >
+                    <MdiIcon path={mdiFormatColorFill} />
+                    Contiguous
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={fillMode === "global"}
+                    onClick={() => setFillMode("global")}
+                  >
+                    <MdiIcon path={mdiSwapHorizontal} />
+                    Global
+                  </button>
+                </div>
+                <label className={styles.rangeField}>
+                  <span className={styles.rangeLabel}>
+                    <span>Fill tolerance</span>
+                    <output>{fillTolerance}</output>
+                  </span>
+                  <input
+                    type="range"
+                    aria-label="Fill tolerance"
+                    min="0"
+                    max="64"
+                    value={fillTolerance}
+                    onChange={(event) => setFillTolerance(Number(event.target.value))}
+                  />
+                </label>
+              </>
+            ) : null}
+            {selectedTool === "eyedropper" ? (
+              <p className={styles.transferMessage}>Click the tile to sample a colour.</p>
+            ) : null}
+          </FieldGroup>
+
+          <FieldGroup title="View">
             <label className={styles.toggleField}>
               <input
                 type="checkbox"
@@ -1320,38 +1553,6 @@ export function PatternMakerPage() {
                 <MdiIcon path={mdiGrid} />
                 Show grid
               </span>
-            </label>
-            <div className={styles.shapeControl} aria-label="Fill mode">
-              <button
-                type="button"
-                aria-pressed={fillMode === "contiguous"}
-                onClick={() => setFillMode("contiguous")}
-              >
-                <MdiIcon path={mdiFormatColorFill} />
-                Contiguous
-              </button>
-              <button
-                type="button"
-                aria-pressed={fillMode === "global"}
-                onClick={() => setFillMode("global")}
-              >
-                <MdiIcon path={mdiSwapHorizontal} />
-                Global
-              </button>
-            </div>
-            <label className={styles.rangeField}>
-              <span className={styles.rangeLabel}>
-                <span>Fill tolerance</span>
-                <output>{fillTolerance}</output>
-              </span>
-              <input
-                type="range"
-                aria-label="Fill tolerance"
-                min="0"
-                max="64"
-                value={fillTolerance}
-                onChange={(event) => setFillTolerance(Number(event.target.value))}
-              />
             </label>
             <label className={styles.toggleField}>
               <input

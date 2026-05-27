@@ -61,7 +61,7 @@ Instead of relying on imported images, you can draw your own seamless repeating 
 - 🪣 Contiguous and global Fill modes with tolerance control
 - 💧 Eyedropper colour picking from the tile
 - 🖌️ Adjustable brush size
-- 🌫️ Brush opacity and circle/square shape controls
+- 🌫️ Brush opacity, flow, hardness, spacing, and circle/square shape controls
 - ⭕ Colour-aware brush, fill, and eyedropper previews on the canvas
 - ♾️ Square painting tile with opposite-edge seam previews
 - 🔁 Wraparound painting across tile edges and corners

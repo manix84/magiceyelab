@@ -31,6 +31,12 @@ export const SeamlessTile: Story = {
     await expect(canvas.getByRole("button", { name: "Pick" })).toBeVisible();
     await expect(canvas.getByRole("slider", { name: "Brush size" })).toBeVisible();
     await expect(canvas.getByRole("slider", { name: "Brush opacity" })).toBeVisible();
+    await expect(canvas.getByRole("slider", { name: "Brush flow" })).toBeVisible();
+    await expect(canvas.getByRole("slider", { name: "Brush hardness" })).toBeVisible();
+    await expect(canvas.getByRole("slider", { name: "Brush spacing" })).toBeVisible();
+    await expect(canvas.queryByRole("slider", { name: "Fill tolerance" })).not.toBeInTheDocument();
+
+    await userEvent.click(canvas.getByRole("button", { name: "Fill" }));
     await expect(canvas.getByRole("slider", { name: "Fill tolerance" })).toBeVisible();
     await expect(canvas.getByLabelText("Current colour hex")).toBeVisible();
     await expect(canvas.getByLabelText("Show grid")).toBeChecked();

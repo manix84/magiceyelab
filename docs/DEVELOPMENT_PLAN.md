@@ -106,7 +106,9 @@ Allow users to create a seamless repeating pattern directly in the browser.
 - Palette support with hex entry and recent colours
 - Adjustable brush size
 - Adjustable brush opacity
+- Adjustable brush flow, hardness, and spacing
 - Circle/square brush shape controls
+- Stamp-based brush interpolation with per-stroke opacity clamping
 - Colour-aware brush, fill, and eyedropper previews
 - Optional grid overlay
 - Optional tile boundary guide
@@ -244,7 +246,8 @@ Users can paint their own hidden image and generate a stereogram from it.
 - Add eyedropper colour picking
 - Add hex colour entry and recent colour swatches
 - Add brush size controls
-- Add brush opacity and shape controls
+- Add brush opacity, flow, hardness, spacing, and shape controls
+- Add stamp-based brush interpolation with a temporary stroke buffer
 - Add colour-aware brush, fill, and eyedropper previews on the canvas
 - Add optional grid overlay
 - Add optional tile boundary guide
