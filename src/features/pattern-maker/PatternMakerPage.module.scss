@@ -396,7 +396,8 @@ label.toggleField {
   grid-template-columns: repeat(5, 1fr);
   gap: 0.45rem;
 
-  button {
+  > button,
+  .paletteSwatch > button:first-child {
     min-height: 2.35rem;
     border-color: var(--color-surface);
     box-shadow: 0 0 0 1px var(--color-border);
@@ -408,6 +409,35 @@ label.toggleField {
         0 0 0 4px var(--color-accent);
     }
   }
+}
+
+.paletteSwatch {
+  position: relative;
+  display: grid;
+  min-width: 0;
+}
+
+.paletteRemoveButton {
+  position: absolute;
+  top: -0.35rem;
+  right: -0.35rem;
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  min-height: 1.25rem;
+  border-radius: 50%;
+  padding: 0;
+  color: var(--color-text);
+  background: var(--color-surface);
+  font-size: 0.9rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.paletteEditorActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
 }
 
 .primaryAction {

@@ -351,6 +351,24 @@ describe("PatternMakerPage", () => {
     expect(screen.getByLabelText("Select recent #abcdef")).toBeInTheDocument();
   });
 
+  it("edits the palette without duplicating colours", async () => {
+    const user = userEvent.setup();
+    renderPatternMakerPage();
+
+    await user.clear(screen.getByLabelText("Current colour hex"));
+    await user.type(screen.getByLabelText("Current colour hex"), "#abcdef");
+    await user.click(screen.getByRole("button", { name: "Edit palette" }));
+    await user.click(screen.getByRole("button", { name: "Add current colour" }));
+
+    expect(screen.getByLabelText("Select #abcdef")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Select recent #abcdef")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add current colour" })).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: "Remove #abcdef from palette" }));
+
+    expect(screen.queryByLabelText("Select #abcdef")).not.toBeInTheDocument();
+  });
+
   it("saves the current tile as the generator pattern", async () => {
     const user = userEvent.setup();
 

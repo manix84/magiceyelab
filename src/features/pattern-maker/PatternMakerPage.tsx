@@ -36,7 +36,7 @@ import { PageHeader } from "../../components/layout/PageHeader";
 import { storageKeys } from "../../lib/storage/keys";
 import styles from "./PatternMakerPage.module.scss";
 
-const palette = ["#1d3557", "#e63946", "#f1faee", "#2a9d8f", "#f4a261"];
+const defaultPalette = ["#1d3557", "#e63946", "#f1faee", "#2a9d8f", "#f4a261"];
 const tileSize = 512;
 const seamSize = 56;
 const repeatPreviewTileSize = 160;
@@ -98,6 +98,7 @@ type StoredGeneratorState = {
 };
 type StoredPatternMakerState = {
   version: 1;
+  paletteColors: string[];
   selectedTool: PatternTool;
   selectedColor: string;
   recentColors: string[];
@@ -132,7 +133,8 @@ const defaultGeneratorState: StoredGeneratorState = {
 const defaultPatternMakerState: StoredPatternMakerState = {
   version: 1,
   selectedTool: "brush",
-  selectedColor: palette[0],
+  selectedColor: defaultPalette[0],
+  paletteColors: defaultPalette,
   recentColors: [],
   brushShape: "circle",
   brushSize: defaultBrushSize,
@@ -260,6 +262,10 @@ function readStoredPatternMakerState(): StoredPatternMakerState {
     const parsedValue = JSON.parse(storedValue) as Partial<StoredPatternMakerState>;
     const selectedColor = normaliseHexColor(parsedValue.selectedColor ?? "")
       ?? defaultPatternMakerState.selectedColor;
+    const paletteColors = normaliseColorList(
+      parsedValue.paletteColors,
+      defaultPatternMakerState.paletteColors,
+    );
 
     return {
       ...defaultPatternMakerState,
@@ -271,10 +277,12 @@ function readStoredPatternMakerState(): StoredPatternMakerState {
         ? parsedValue.selectedTool as PatternTool
         : defaultPatternMakerState.selectedTool,
       selectedColor,
+      paletteColors,
       recentColors: Array.isArray(parsedValue.recentColors)
         ? parsedValue.recentColors
           .map((color) => normaliseHexColor(color))
           .filter((color): color is string => Boolean(color))
+          .filter((color) => !paletteColors.includes(color))
           .slice(0, 5)
         : [],
       brushShape: [
@@ -395,8 +403,20 @@ function normaliseHexColor(value: string) {
   return /^#[\da-f]{6}$/i.test(color) ? color.toLowerCase() : null;
 }
 
+function normaliseColorList(colors: unknown, fallback: string[] = []) {
+  if (!Array.isArray(colors)) {
+    return fallback;
+  }
+
+  const normalisedColors = colors
+    .map((color) => typeof color === "string" ? normaliseHexColor(color) : null)
+    .filter((color): color is string => Boolean(color));
+
+  return [...new Set(normalisedColors)];
+}
+
 function hexToRgb(value: string) {
-  const color = normaliseHexColor(value) ?? palette[0];
+  const color = normaliseHexColor(value) ?? defaultPalette[0];
 
   return {
     red: Number.parseInt(color.slice(1, 3), 16),
@@ -452,6 +472,10 @@ export function PatternMakerPage() {
   );
   const [colorInputValue, setColorInputValue] = useState(
     storedPatternMakerState.selectedColor,
+  );
+  const [isPaletteEditing, setIsPaletteEditing] = useState(false);
+  const [paletteColors, setPaletteColors] = useState<string[]>(
+    storedPatternMakerState.paletteColors,
   );
   const [recentColors, setRecentColors] = useState<string[]>(
     storedPatternMakerState.recentColors,
@@ -524,8 +548,34 @@ export function PatternMakerPage() {
     setColorInputValue(normalisedColor);
     setRecentColors((colors) => [
       normalisedColor,
-      ...colors.filter((recentColor) => recentColor !== normalisedColor),
+      ...colors.filter((recentColor) => (
+        recentColor !== normalisedColor && !paletteColors.includes(recentColor)
+      )),
     ].slice(0, 5));
+  }
+
+  function addCurrentColorToPalette() {
+    setPaletteColors((colors) => {
+      if (colors.includes(selectedColor)) {
+        return colors;
+      }
+
+      return [...colors, selectedColor];
+    });
+    setRecentColors((colors) => colors.filter((color) => color !== selectedColor));
+  }
+
+  function removePaletteColor(colorToRemove: string) {
+    if (paletteColors.length <= 1) {
+      return;
+    }
+
+    setPaletteColors((colors) => colors.filter((color) => color !== colorToRemove));
+  }
+
+  function resetPalette() {
+    setPaletteColors(defaultPalette);
+    setRecentColors((colors) => colors.filter((color) => !defaultPalette.includes(color)));
   }
 
   function writePatternMakerDraft() {
@@ -539,6 +589,7 @@ export function PatternMakerPage() {
       version: 1,
       selectedTool,
       selectedColor,
+      paletteColors,
       recentColors,
       brushShape,
       brushSize,
@@ -1379,7 +1430,7 @@ export function PatternMakerPage() {
     context.lineJoin = "round";
 
     for (let index = 0; index < 22; index += 1) {
-      const color = palette[Math.floor(Math.random() * palette.length)];
+      const color = paletteColors[Math.floor(Math.random() * paletteColors.length)] ?? defaultPalette[0];
       const startX = Math.random() * tileSize;
       const startY = Math.random() * tileSize;
       const length = 80 + Math.random() * 180;
@@ -1397,7 +1448,7 @@ export function PatternMakerPage() {
     }
 
     for (let index = 0; index < 72; index += 1) {
-      context.fillStyle = palette[index % palette.length];
+      context.fillStyle = paletteColors[index % paletteColors.length] ?? defaultPalette[0];
       drawWrappedCircle(
         context,
         Math.random() * tileSize,
@@ -2032,15 +2083,27 @@ export function PatternMakerPage() {
                   </span>
                 </label>
                 <div className={styles.paletteRow}>
-                  {palette.map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      aria-label={`Select ${color}`}
-                      aria-pressed={selectedColor === color}
-                      onClick={() => selectColor(color)}
-                      style={{ backgroundColor: color }}
-                    />
+                  {paletteColors.map((color) => (
+                    <span className={styles.paletteSwatch} key={color}>
+                      <button
+                        type="button"
+                        aria-label={`Select ${color}`}
+                        aria-pressed={selectedColor === color}
+                        onClick={() => selectColor(color)}
+                        style={{ backgroundColor: color }}
+                      />
+                      {isPaletteEditing ? (
+                        <button
+                          className={styles.paletteRemoveButton}
+                          type="button"
+                          aria-label={`Remove ${color} from palette`}
+                          disabled={paletteColors.length <= 1}
+                          onClick={() => removePaletteColor(color)}
+                        >
+                          ×
+                        </button>
+                      ) : null}
+                    </span>
                   ))}
                 </div>
                 {recentColors.length > 0 ? (
@@ -2057,9 +2120,27 @@ export function PatternMakerPage() {
                     ))}
                   </div>
                 ) : null}
-                <button type="button">
+                {isPaletteEditing ? (
+                  <div className={styles.paletteEditorActions}>
+                    <button
+                      type="button"
+                      disabled={paletteColors.includes(selectedColor)}
+                      onClick={addCurrentColorToPalette}
+                    >
+                      Add current colour
+                    </button>
+                    <button type="button" onClick={resetPalette}>
+                      Reset palette
+                    </button>
+                  </div>
+                ) : null}
+                <button
+                  type="button"
+                  aria-expanded={isPaletteEditing}
+                  onClick={() => setIsPaletteEditing((isEditing) => !isEditing)}
+                >
                   <MdiIcon path={mdiPalette} />
-                  Edit palette
+                  {isPaletteEditing ? "Done editing" : "Edit palette"}
                 </button>
               </div>
             ) : null}
