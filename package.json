@@ -1,11 +1,11 @@
 {
   "name": "magiceyelab",
-  "version": "3.11.0",
+  "version": "4.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/create-pages-fallback.mjs",
     "build:dry-run": "npm run build",
     "preview": "vite preview",
     "test": "vitest run --project unit",
