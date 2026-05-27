@@ -1,8 +1,13 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
+import { AppErrorBoundary } from "./features/errors/AppErrorBoundary";
+
+function ThrowingRoute(): never {
+  throw new Error("Test render failure");
+}
 
 describe("App", () => {
   afterEach(() => {
@@ -72,6 +77,36 @@ describe("App", () => {
     expect(
       screen.getByRole("heading", { name: "Render interrupted" }),
     ).toBeInTheDocument();
+  });
+
+  it("recovers from the error boundary fallback on navigation", async () => {
+    const user = userEvent.setup();
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    try {
+      render(
+        <MemoryRouter initialEntries={["/broken"]}>
+          <AppErrorBoundary>
+            <Routes>
+              <Route path="/broken" element={<ThrowingRoute />} />
+              <Route path="/generator" element={<h1>Recovered generator</h1>} />
+            </Routes>
+          </AppErrorBoundary>
+        </MemoryRouter>,
+      );
+
+      expect(
+        screen.getByRole("heading", { name: "Render interrupted" }),
+      ).toBeInTheDocument();
+
+      await user.click(screen.getByRole("link", { name: "Back to generator" }));
+
+      expect(
+        screen.getByRole("heading", { name: "Recovered generator" }),
+      ).toBeInTheDocument();
+    } finally {
+      consoleError.mockRestore();
+    }
   });
 
   it("defaults theme mode to auto and can switch to explicit themes", async () => {

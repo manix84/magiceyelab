@@ -1,16 +1,18 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { useLocation } from "react-router-dom";
 import { AppLayout } from "../../components/layout/AppLayout";
 import { ServerErrorPage } from "./ErrorPage";
 
 type AppErrorBoundaryProps = {
   children: ReactNode;
+  resetKey: string;
 };
 
 type AppErrorBoundaryState = {
   hasError: boolean;
 };
 
-export class AppErrorBoundary extends Component<
+class AppErrorBoundaryInner extends Component<
   AppErrorBoundaryProps,
   AppErrorBoundaryState
 > {
@@ -26,6 +28,15 @@ export class AppErrorBoundary extends Component<
     console.error("MagicEyeLab render error", error, errorInfo);
   }
 
+  componentDidUpdate(previousProps: AppErrorBoundaryProps) {
+    if (
+      this.state.hasError &&
+      previousProps.resetKey !== this.props.resetKey
+    ) {
+      this.setState({ hasError: false });
+    }
+  }
+
   render() {
     if (this.state.hasError) {
       return (
@@ -37,4 +48,19 @@ export class AppErrorBoundary extends Component<
 
     return this.props.children;
   }
+}
+
+type AppErrorBoundaryWrapperProps = {
+  children: ReactNode;
+};
+
+export function AppErrorBoundary({ children }: AppErrorBoundaryWrapperProps) {
+  const location = useLocation();
+  const resetKey = `${location.pathname}${location.search}${location.hash}`;
+
+  return (
+    <AppErrorBoundaryInner resetKey={resetKey}>
+      {children}
+    </AppErrorBoundaryInner>
+  );
 }
