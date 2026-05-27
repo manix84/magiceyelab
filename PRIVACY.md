@@ -32,11 +32,14 @@ Image generation, depth painting, and pattern creation are processed locally in 
 MagicEyeLab may optionally store small amounts of data in your browser for convenience purposes, such as:
 
 - ⚙️ Saved settings
-- 🗂️ Recent projects
+- 🗂️ Restored generator workspace state
+- 🖼️ Imported depth and pattern images, stored locally in a bounded browser-friendly format
 - 🎨 UI preferences
 - 🧠 Temporary working state
 
 This data never leaves your device.
+
+You can clear this data at any time using your browser's site data/storage controls.
 
 ---
 

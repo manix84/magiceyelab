@@ -20,6 +20,8 @@ Generate classic Magic Eye style hidden 3D images instantly.
 - 🎛️ Adjustable stereogram depth
 - 🔁 Pattern repetition controls
 - ⚡ Live preview rendering
+- 🧭 Depth overlay preview
+- 💾 Restores generator controls and imported images from local browser storage
 - 💾 Export generated images
 - 🌐 Browser-based processing
 
@@ -54,11 +56,12 @@ Instead of relying on imported images, you can draw your own seamless repeating 
 
 ### Includes
 
-- 🎮 Pixel-style drawing tools
-- ♾️ Seamless tiling preview
+- 🎮 Canvas-based drawing tools
+- ♾️ Square painting tile with opposite-edge seam previews
+- 🧱 Repeated preview panel showing multiple tiled copies
 - 🎨 Palette controls
 - 📥 Import/export patterns
-- 🎲 Random pattern generation
+- 🎲 Seamless random pattern generation
 - ⚡ Live stereogram updates
 
 ---
@@ -68,6 +71,8 @@ Instead of relying on imported images, you can draw your own seamless repeating 
 MagicEyeLab processes everything locally in your browser whenever possible.
 
 Your images are not uploaded to a server.
+
+Generator settings and imported working images may be saved in your browser's local storage so the app can restore your workspace when you come back. This data stays on your device.
 
 - 🚫 No accounts
 - 🚫 No analytics

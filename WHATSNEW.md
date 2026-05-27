@@ -1,5 +1,23 @@
 # ✨ What's New
 
+## 🧩 Pattern Maker Improvements
+
+- Added a square pattern painting tile for building seamless textures.
+- Added opposite-edge preview strips around the tile so top/bottom and left/right seams can be checked while painting.
+- Added a repeated preview panel that shows multiple tiled copies instead of stretching one tile.
+- Updated random pattern generation so generated motifs wrap across tile edges.
+- Added Pattern Maker unit coverage and a Storybook story for the seamless tile workflow.
+
+---
+
+## 💾 Workspace Restore
+
+- Generator controls now restore from browser local storage.
+- Imported generator depth and pattern images can be restored locally when returning to the page.
+- Stored images are bounded before saving, with a controls-only fallback if browser storage quota is exceeded.
+
+---
+
 ## 🚀 v0.1.0 — Initial Concept
 
 Initial public project setup.
