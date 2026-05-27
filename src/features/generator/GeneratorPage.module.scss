@@ -311,6 +311,7 @@ label.toggleField {
 .stereogramPreview {
   position: relative;
   display: grid;
+  height: clamp(24rem, 58vh, 42rem);
   min-height: clamp(24rem, 58vh, 42rem);
   overflow: hidden;
   place-items: center;
@@ -322,9 +323,7 @@ label.toggleField {
 .stereogramCanvas {
   display: block;
   width: 100%;
-  height: auto;
-  max-height: clamp(24rem, 58vh, 42rem);
-  object-fit: contain;
+  height: 100%;
 }
 
 .previewEmpty {

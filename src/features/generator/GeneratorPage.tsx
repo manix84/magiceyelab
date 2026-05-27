@@ -13,14 +13,47 @@ import { PageHeader } from "../../components/layout/PageHeader";
 import { supportedImageTypes } from "../import-export";
 import { inferDepthMap } from "../../lib/image/inferDepthMap";
 import { loadImageFile } from "../../lib/image/loadImageFile";
+import { storageKeys } from "../../lib/storage/keys";
 import { defaultStereogramSettings } from "../../lib/stereogram/settings";
 import { renderStereogram } from "../../lib/stereogram/renderStereogram";
 import styles from "./GeneratorPage.module.scss";
 
 const maxPreviewEdge = 1200;
 const maxPreviewPixels = 900_000;
+const maxStoredDepthEdge = 1200;
+const maxStoredPatternEdge = 512;
 const exportNamePlaceholder = "magiceye_DD-MM-YYYY_hh-mm-ss.png";
 type ImportSource = "depth" | "pattern";
+type PreviewBounds = {
+  width: number;
+  height: number;
+};
+
+type StoredGeneratorState = {
+  version: 1;
+  exportName: string;
+  depthStrength: number;
+  repeatWidth: number;
+  showDepthOverlay: boolean;
+  depthFileName: string;
+  depthInferenceMessage: string;
+  depthImageDataUrl: string;
+  patternFileName: string;
+  patternImageDataUrl: string;
+};
+
+const defaultStoredGeneratorState: StoredGeneratorState = {
+  version: 1,
+  exportName: "",
+  depthStrength: 45,
+  repeatWidth: 120,
+  showDepthOverlay: false,
+  depthFileName: "",
+  depthInferenceMessage: "",
+  depthImageDataUrl: "",
+  patternFileName: "",
+  patternImageDataUrl: "",
+};
 
 function createDefaultExportName(date = new Date()) {
   const parts = [
@@ -40,6 +73,87 @@ function normalisePngFileName(fileName: string) {
   return trimmedName.toLowerCase().endsWith(".png")
     ? trimmedName
     : `${trimmedName}.png`;
+}
+
+function clampNumber(value: unknown, min: number, max: number, fallback: number) {
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.min(max, Math.max(min, value))
+    : fallback;
+}
+
+function readStoredGeneratorState(): StoredGeneratorState {
+  try {
+    const storedValue = window.localStorage.getItem(storageKeys.generator);
+
+    if (!storedValue) {
+      return defaultStoredGeneratorState;
+    }
+
+    const parsedValue = JSON.parse(storedValue) as Partial<StoredGeneratorState>;
+
+    return {
+      version: 1,
+      exportName:
+        typeof parsedValue.exportName === "string" ? parsedValue.exportName : "",
+      depthStrength: clampNumber(
+        parsedValue.depthStrength,
+        0,
+        100,
+        defaultStoredGeneratorState.depthStrength,
+      ),
+      repeatWidth: clampNumber(
+        parsedValue.repeatWidth,
+        48,
+        240,
+        defaultStoredGeneratorState.repeatWidth,
+      ),
+      showDepthOverlay: parsedValue.showDepthOverlay === true,
+      depthFileName:
+        typeof parsedValue.depthFileName === "string" ? parsedValue.depthFileName : "",
+      depthInferenceMessage:
+        typeof parsedValue.depthInferenceMessage === "string"
+          ? parsedValue.depthInferenceMessage
+          : "",
+      depthImageDataUrl:
+        typeof parsedValue.depthImageDataUrl === "string"
+          ? parsedValue.depthImageDataUrl
+          : "",
+      patternFileName:
+        typeof parsedValue.patternFileName === "string"
+          ? parsedValue.patternFileName
+          : "",
+      patternImageDataUrl:
+        typeof parsedValue.patternImageDataUrl === "string"
+          ? parsedValue.patternImageDataUrl
+          : "",
+    };
+  } catch {
+    return defaultStoredGeneratorState;
+  }
+}
+
+function writeStoredGeneratorState(payload: StoredGeneratorState) {
+  try {
+    window.localStorage.setItem(storageKeys.generator, JSON.stringify(payload));
+  } catch {
+    const controlsOnlyPayload: StoredGeneratorState = {
+      ...payload,
+      depthFileName: "",
+      depthInferenceMessage: "",
+      depthImageDataUrl: "",
+      patternFileName: "",
+      patternImageDataUrl: "",
+    };
+
+    try {
+      window.localStorage.setItem(
+        storageKeys.generator,
+        JSON.stringify(controlsOnlyPayload),
+      );
+    } catch {
+      window.localStorage.removeItem(storageKeys.generator);
+    }
+  }
 }
 
 function getImageValidationError(file: File) {
@@ -62,38 +176,102 @@ function hasSupportedDraggedFile(dataTransfer: DataTransfer) {
   );
 }
 
-function getPreviewSize(image: HTMLImageElement) {
-  const edgeScale = Math.min(
+function getPreviewSize(image: HTMLImageElement, bounds: PreviewBounds) {
+  const fallbackWidth = Math.min(maxPreviewEdge, image.naturalWidth);
+  const fallbackHeight = Math.max(
     1,
-    maxPreviewEdge / Math.max(image.naturalWidth, image.naturalHeight),
+    Math.round(fallbackWidth / (image.naturalWidth / image.naturalHeight)),
   );
-  const pixelScale = Math.min(
-    1,
-    Math.sqrt(maxPreviewPixels / (image.naturalWidth * image.naturalHeight)),
-  );
+  const targetWidth = bounds.width > 0 ? bounds.width : fallbackWidth;
+  const targetHeight = bounds.height > 0 ? bounds.height : fallbackHeight;
+  const edgeScale = Math.min(1, maxPreviewEdge / Math.max(targetWidth, targetHeight));
+  const pixelScale = Math.min(1, Math.sqrt(maxPreviewPixels / (targetWidth * targetHeight)));
   const scale = Math.min(edgeScale, pixelScale);
-  const width = Math.max(1, Math.round(image.naturalWidth * scale));
-  const height = Math.max(1, Math.round(image.naturalHeight * scale));
+  const width = Math.max(1, Math.round(targetWidth * scale));
+  const height = Math.max(1, Math.round(targetHeight * scale));
 
   return { width, height };
 }
 
+function loadImageSource(source: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Could not restore stored image."));
+    image.src = source;
+  });
+}
+
+function imageToStoredDataUrl(image: HTMLImageElement, maxEdge: number) {
+  const scale = Math.min(1, maxEdge / Math.max(image.naturalWidth, image.naturalHeight));
+  const width = Math.max(1, Math.round(image.naturalWidth * scale));
+  const height = Math.max(1, Math.round(image.naturalHeight * scale));
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    throw new Error("Could not create storage image context.");
+  }
+
+  canvas.width = width;
+  canvas.height = height;
+  context.drawImage(image, 0, 0, width, height);
+
+  return canvas.toDataURL("image/png");
+}
+
+function revokeObjectUrl(url: string) {
+  if (url.startsWith("blob:")) {
+    URL.revokeObjectURL(url);
+  }
+}
+
 export function GeneratorPage() {
-  const [exportName, setExportName] = useState("");
-  const [depthStrength, setDepthStrength] = useState(45);
-  const [repeatWidth, setRepeatWidth] = useState(120);
-  const [showDepthOverlay, setShowDepthOverlay] = useState(false);
+  const [storedGeneratorState] = useState(readStoredGeneratorState);
+  const [exportName, setExportName] = useState(storedGeneratorState.exportName);
+  const [depthStrength, setDepthStrength] = useState(
+    storedGeneratorState.depthStrength,
+  );
+  const [repeatWidth, setRepeatWidth] = useState(storedGeneratorState.repeatWidth);
+  const [showDepthOverlay, setShowDepthOverlay] = useState(
+    storedGeneratorState.showDepthOverlay,
+  );
   const [depthImage, setDepthImage] = useState<HTMLImageElement | null>(null);
-  const [depthFileName, setDepthFileName] = useState("");
-  const [depthInferenceMessage, setDepthInferenceMessage] = useState("");
+  const [depthFileName, setDepthFileName] = useState(
+    storedGeneratorState.depthImageDataUrl ? storedGeneratorState.depthFileName : "",
+  );
+  const [depthInferenceMessage, setDepthInferenceMessage] = useState(
+    storedGeneratorState.depthImageDataUrl
+      ? storedGeneratorState.depthInferenceMessage
+      : "",
+  );
   const [depthImportError, setDepthImportError] = useState("");
   const [patternImage, setPatternImage] = useState<HTMLImageElement | null>(null);
-  const [patternFileName, setPatternFileName] = useState("");
+  const [patternFileName, setPatternFileName] = useState(
+    storedGeneratorState.patternImageDataUrl
+      ? storedGeneratorState.patternFileName
+      : "",
+  );
   const [patternImportError, setPatternImportError] = useState("");
   const [dragSource, setDragSource] = useState<ImportSource | null>(null);
   const [rejectedDragSource, setRejectedDragSource] = useState<ImportSource | null>(null);
-  const [depthThumbnailUrl, setDepthThumbnailUrl] = useState("");
-  const [patternThumbnailUrl, setPatternThumbnailUrl] = useState("");
+  const [depthThumbnailUrl, setDepthThumbnailUrl] = useState(
+    storedGeneratorState.depthImageDataUrl,
+  );
+  const [patternThumbnailUrl, setPatternThumbnailUrl] = useState(
+    storedGeneratorState.patternImageDataUrl,
+  );
+  const [depthImageDataUrl, setDepthImageDataUrl] = useState(
+    storedGeneratorState.depthImageDataUrl,
+  );
+  const [patternImageDataUrl, setPatternImageDataUrl] = useState(
+    storedGeneratorState.patternImageDataUrl,
+  );
+  const [previewBounds, setPreviewBounds] = useState<PreviewBounds>({
+    width: 0,
+    height: 0,
+  });
   const depthThumbnailUrlRef = useRef("");
   const patternThumbnailUrlRef = useRef("");
   const depthImportRequestRef = useRef(0);
@@ -105,31 +283,138 @@ export function GeneratorPage() {
   useEffect(() => {
     return () => {
       if (depthThumbnailUrlRef.current) {
-        URL.revokeObjectURL(depthThumbnailUrlRef.current);
+        revokeObjectUrl(depthThumbnailUrlRef.current);
       }
 
       if (patternThumbnailUrlRef.current) {
-        URL.revokeObjectURL(patternThumbnailUrlRef.current);
+        revokeObjectUrl(patternThumbnailUrlRef.current);
       }
     };
   }, []);
+
+  useEffect(() => {
+    const previewElement = canvasRef.current?.parentElement ?? null;
+
+    if (!previewElement) {
+      return;
+    }
+
+    const observedElement = previewElement;
+
+    function updatePreviewBounds() {
+      const bounds = observedElement.getBoundingClientRect();
+      setPreviewBounds({
+        width: Math.max(1, Math.round(bounds.width)),
+        height: Math.max(1, Math.round(bounds.height)),
+      });
+    }
+
+    updatePreviewBounds();
+
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updatePreviewBounds);
+
+      return () => window.removeEventListener("resize", updatePreviewBounds);
+    }
+
+    const resizeObserver = new ResizeObserver(updatePreviewBounds);
+    resizeObserver.observe(observedElement);
+
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    async function restoreStoredImages() {
+      if (storedGeneratorState.depthImageDataUrl) {
+        try {
+          const image = await loadImageSource(storedGeneratorState.depthImageDataUrl);
+
+          if (isCurrent) {
+            setDepthImage(image);
+            setDepthImportError("");
+          }
+        } catch {
+          if (isCurrent) {
+            setDepthImageDataUrl("");
+            setDepthThumbnailUrl("");
+            setDepthFileName("");
+            setDepthInferenceMessage("");
+          }
+        }
+      }
+
+      if (storedGeneratorState.patternImageDataUrl) {
+        try {
+          const image = await loadImageSource(storedGeneratorState.patternImageDataUrl);
+
+          if (isCurrent) {
+            setPatternImage(image);
+            setPatternImportError("");
+          }
+        } catch {
+          if (isCurrent) {
+            setPatternImageDataUrl("");
+            setPatternThumbnailUrl("");
+            setPatternFileName("");
+          }
+        }
+      }
+    }
+
+    void restoreStoredImages();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [storedGeneratorState.depthImageDataUrl, storedGeneratorState.patternImageDataUrl]);
+
+  useEffect(() => {
+    const payload: StoredGeneratorState = {
+      version: 1,
+      exportName,
+      depthStrength,
+      repeatWidth,
+      showDepthOverlay,
+      depthFileName: depthImageDataUrl ? depthFileName : "",
+      depthInferenceMessage: depthImageDataUrl ? depthInferenceMessage : "",
+      depthImageDataUrl,
+      patternFileName: patternImageDataUrl ? patternFileName : "",
+      patternImageDataUrl,
+    };
+
+    writeStoredGeneratorState(payload);
+  }, [
+    depthFileName,
+    depthImageDataUrl,
+    depthInferenceMessage,
+    depthStrength,
+    exportName,
+    patternFileName,
+    patternImageDataUrl,
+    repeatWidth,
+    showDepthOverlay,
+  ]);
 
   function clearDepthImport() {
     setDepthImage(null);
     setDepthFileName("");
     setDepthInferenceMessage("");
+    setDepthImageDataUrl("");
     replaceDepthThumbnail(null);
   }
 
   function clearPatternImport() {
     setPatternImage(null);
     setPatternFileName("");
+    setPatternImageDataUrl("");
     replacePatternThumbnail(null);
   }
 
   function replaceDepthThumbnail(file: File | null) {
     if (depthThumbnailUrlRef.current) {
-      URL.revokeObjectURL(depthThumbnailUrlRef.current);
+      revokeObjectUrl(depthThumbnailUrlRef.current);
     }
 
     const nextUrl = file ? URL.createObjectURL(file) : "";
@@ -139,7 +424,7 @@ export function GeneratorPage() {
 
   function replacePatternThumbnail(file: File | null) {
     if (patternThumbnailUrlRef.current) {
-      URL.revokeObjectURL(patternThumbnailUrlRef.current);
+      revokeObjectUrl(patternThumbnailUrlRef.current);
     }
 
     const nextUrl = file ? URL.createObjectURL(file) : "";
@@ -167,6 +452,7 @@ export function GeneratorPage() {
 
       setPatternImage(image);
       setPatternFileName(file.name);
+      setPatternImageDataUrl(imageToStoredDataUrl(image, maxStoredPatternEdge));
       replacePatternThumbnail(file);
       setPatternImportError("");
     } catch (error) {
@@ -200,9 +486,15 @@ export function GeneratorPage() {
         return;
       }
 
+      const storedDepthImageDataUrl = imageToStoredDataUrl(
+        inference.image,
+        maxStoredDepthEdge,
+      );
+
       setDepthImage(inference.image);
       setDepthFileName(file.name);
       setDepthInferenceMessage(inference.message);
+      setDepthImageDataUrl(storedDepthImageDataUrl);
       replaceDepthThumbnail(file);
       setDepthImportError("");
     } catch (error) {
@@ -311,7 +603,7 @@ export function GeneratorPage() {
 
     const timeoutId = window.setTimeout(() => {
       const frameId = window.requestAnimationFrame(() => {
-        const { width, height } = getPreviewSize(depthImage);
+        const { width, height } = getPreviewSize(depthImage, previewBounds);
 
         renderStereogram({
           canvas,
@@ -339,7 +631,14 @@ export function GeneratorPage() {
         delete canvas.dataset.renderFrame;
       }
     };
-  }, [depthImage, depthStrength, patternImage, repeatWidth, showDepthOverlay]);
+  }, [
+    depthImage,
+    depthStrength,
+    patternImage,
+    previewBounds,
+    repeatWidth,
+    showDepthOverlay,
+  ]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
