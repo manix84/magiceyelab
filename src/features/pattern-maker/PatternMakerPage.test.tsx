@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -13,8 +13,10 @@ function createCanvasContextMock() {
     drawImage: vi.fn(),
     fill: vi.fn(),
     fillRect: vi.fn(),
+    getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(4) })),
     lineTo: vi.fn(),
     moveTo: vi.fn(),
+    putImageData: vi.fn(),
     stroke: vi.fn(),
     set fillStyle(_value: unknown) {},
     set lineCap(_value: unknown) {},
@@ -88,6 +90,37 @@ describe("PatternMakerPage", () => {
     expect(context.arc).toHaveBeenCalled();
     expect(context.createPattern).toHaveBeenCalled();
     expect(context.fillRect).toHaveBeenCalled();
+  });
+
+  it("supports pencil, brush sizing, grid toggle, and history controls", async () => {
+    const user = userEvent.setup();
+    renderPatternMakerPage();
+
+    await user.click(screen.getByRole("button", { name: "Pencil" }));
+    await user.click(screen.getByLabelText("Show grid"));
+
+    expect(screen.getByRole("button", { name: "Pencil" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByLabelText("pencil preview, 36px")).toBeInTheDocument();
+    expect(screen.getByRole("slider", { name: "Brush size" })).toHaveValue("36");
+    expect(screen.getByLabelText("Show grid")).not.toBeChecked();
+    expect(screen.getByRole("button", { name: "Undo" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Redo" })).toBeDisabled();
+  });
+
+  it("supports keyboard shortcuts for undo and redo", async () => {
+    const user = userEvent.setup();
+    renderPatternMakerPage();
+
+    await user.click(screen.getByRole("button", { name: "Random pattern" }));
+
+    fireEvent.keyDown(window, { key: "z", ctrlKey: true });
+    expect(context.putImageData).toHaveBeenCalledTimes(1);
+
+    fireEvent.keyDown(window, { key: "z", ctrlKey: true, shiftKey: true });
+    expect(context.putImageData).toHaveBeenCalledTimes(2);
   });
 
   it("saves the current tile as the generator pattern", async () => {

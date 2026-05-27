@@ -97,9 +97,14 @@ Allow users to create a seamless repeating pattern directly in the browser.
 
 - Canvas-based pattern drawing
 - Pixel-style brush
+- Hard-edged pencil tool
 - Eraser
 - Colour picker
 - Palette support
+- Adjustable brush size
+- Brush/pencil size and shape preview
+- Optional grid overlay
+- Stroke-based undo / redo
 - Seamless tile preview with opposite-edge strips around the active painting tile
 - Wraparound painting across tile boundaries and corners
 - Repeated pattern preview that shows several tiled copies at once
@@ -225,7 +230,11 @@ Users can paint their own hidden image and generate a stereogram from it.
 - Add pattern drawing canvas
 - Add colour picker
 - Add palette
-- Add brush and eraser tools
+- Add pencil, brush, and eraser tools
+- Add brush size controls
+- Add brush/pencil size preview on controls and canvas
+- Add optional grid overlay
+- Add undo / redo
 - Add seamless tile preview with live opposite-edge references
 - Add wraparound painting for strokes that cross tile boundaries
 - Add random pattern generator that draws wrapped seamless shapes

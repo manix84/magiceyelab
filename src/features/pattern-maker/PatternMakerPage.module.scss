@@ -14,6 +14,147 @@
 
 .segmentedControl {
   @include mixins.segmented-control;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.rangeField {
+  display: grid;
+  gap: 0.45rem;
+  color: var(--color-label);
+  font-size: 0.9rem;
+  font-weight: 700;
+
+  input {
+    width: 100%;
+  }
+}
+
+.brushPreview {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 7.25rem;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 8px;
+  padding: 0.65rem 0.8rem;
+  background:
+    linear-gradient(90deg, rgba(var(--color-accent-rgb), 0.08) 1px, transparent 1px),
+    linear-gradient(rgba(var(--color-accent-rgb), 0.08) 1px, transparent 1px),
+    var(--color-surface-subtle);
+  background-size: 12px 12px;
+}
+
+.brushPreviewLabel {
+  color: var(--color-label);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.brushPreviewPad {
+  display: grid;
+  place-items: center;
+  min-height: 6.25rem;
+}
+
+.brushShape {
+  width: var(--brush-preview-size);
+  aspect-ratio: 1;
+  border: 2px solid var(--color-accent);
+  border-radius: 50%;
+  background: rgba(var(--color-accent-rgb), 0.2);
+  box-shadow:
+    0 0 0 1px var(--color-surface),
+    0 0 18px rgba(var(--color-accent-rgb), 0.2);
+}
+
+.pencilShape {
+  border-radius: 3px;
+}
+
+.eraserShape {
+  border-style: dashed;
+  background: rgba(var(--color-danger-rgb), 0.12);
+}
+
+.rangeLabel {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+label.toggleField {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 8px;
+  padding: 0.65rem 0.8rem;
+  color: var(--color-label);
+  background: var(--color-surface-subtle);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 700;
+
+  input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    opacity: 0;
+    pointer-events: none;
+
+    &:checked + .toggleSwitch {
+      border-color: var(--color-accent);
+      background: var(--color-accent);
+
+      &::after {
+        transform: translateX(1.1rem);
+      }
+    }
+
+    &:focus-visible + .toggleSwitch {
+      outline: 2px solid rgba(var(--color-accent-rgb), 0.24);
+      outline-offset: 3px;
+    }
+  }
+}
+
+.toggleSwitch {
+  flex: 0 0 auto;
+  width: 2.55rem;
+  height: 1.45rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-border-soft);
+  box-shadow: inset 0 1px 2px var(--shadow-soft);
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+
+  &::after {
+    display: block;
+    width: 1.05rem;
+    height: 1.05rem;
+    margin: 0.14rem;
+    border-radius: 50%;
+    background: var(--color-surface);
+    box-shadow: 0 1px 4px var(--shadow-soft);
+    content: "";
+    transition: transform 160ms ease;
+  }
+}
+
+.toggleLabel {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
 }
 
 .paletteRow {
@@ -37,6 +178,12 @@
 
 .primaryAction {
   @include mixins.primary-action;
+}
+
+.iconRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
 }
 
 .actionStack {
@@ -99,15 +246,62 @@
 }
 
 .paintCanvas {
+  display: block;
+  position: relative;
   width: 100%;
   height: 100%;
   aspect-ratio: 1;
+  background: var(--color-surface-subtle);
+  cursor: crosshair;
+  touch-action: none;
+  z-index: 0;
+}
+
+.canvasCell {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   border: 1px solid var(--color-accent);
   border-radius: 8px;
   background: var(--color-surface-subtle);
   box-shadow: 0 10px 28px var(--shadow-soft);
-  cursor: crosshair;
-  touch-action: none;
+}
+
+.gridOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(90deg, rgba(var(--color-accent-rgb), 0.18) 1px, transparent 1px),
+    linear-gradient(rgba(var(--color-accent-rgb), 0.18) 1px, transparent 1px);
+  background-size: 6.25% 6.25%;
+}
+
+.brushCursor {
+  position: absolute;
+  top: var(--brush-cursor-y);
+  left: var(--brush-cursor-x);
+  z-index: 2;
+  width: var(--brush-cursor-size);
+  min-width: 0.5rem;
+  aspect-ratio: 1;
+  border: 2px solid var(--color-accent);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  box-shadow:
+    0 0 0 1px var(--color-surface),
+    0 0 16px rgba(var(--color-accent-rgb), 0.36);
+}
+
+.pencilBrushCursor {
+  border-radius: 3px;
+}
+
+.eraserBrushCursor {
+  border-style: dashed;
 }
 
 .topSeam,

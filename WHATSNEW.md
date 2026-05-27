@@ -3,6 +3,11 @@
 ## 🧩 Pattern Maker Improvements
 
 - Added a square pattern painting tile for building seamless textures.
+- Added Pencil mode for hard-edged pattern drawing.
+- Added adjustable brush size.
+- Added brush and pencil shape previews in the controls and over the paint tile.
+- Added an optional grid overlay for precise tile work.
+- Added stroke/action-based undo and redo controls.
 - Added opposite-edge preview strips around the tile so top/bottom and left/right seams can be checked while painting.
 - Added wraparound painting so manual strokes continue across tile edges and corners.
 - Added a repeated preview panel that shows multiple tiled copies instead of stretching one tile.

@@ -57,8 +57,13 @@ Instead of relying on imported images, you can draw your own seamless repeating 
 ### Includes
 
 - 🎮 Canvas-based drawing tools
+- ✏️ Hard-edged Pencil mode for crisp tile work
+- 🖌️ Adjustable brush size
+- ⭕ Brush and pencil size previews on the controls and canvas
 - ♾️ Square painting tile with opposite-edge seam previews
 - 🔁 Wraparound painting across tile edges and corners
+- #️⃣ Optional grid overlay
+- ↩️ Stroke-based undo / redo
 - 🧱 Repeated preview panel showing multiple tiled copies
 - 🎨 Palette controls
 - 🔗 Send the current tile to the Generator, or edit the Generator's current pattern
