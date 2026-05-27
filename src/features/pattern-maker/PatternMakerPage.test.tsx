@@ -377,6 +377,7 @@ describe("PatternMakerPage", () => {
     expect(screen.getByLabelText("Select #abcdef")).toBeInTheDocument();
     expect(screen.queryByLabelText("Select recent #abcdef")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add current colour" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Remove #1d3557 from palette" })).toBeEnabled();
 
     await user.click(screen.getByRole("button", { name: "Remove #abcdef from palette" }));
 

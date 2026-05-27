@@ -604,10 +604,6 @@ export function PatternMakerPage() {
   }
 
   function removePaletteColor(colorToRemove: string) {
-    if (paletteColors.length <= 1) {
-      return;
-    }
-
     setPaletteColors((colors) => colors.filter((color) => color !== colorToRemove));
   }
 
@@ -1692,6 +1688,8 @@ export function PatternMakerPage() {
   const usesSoftBrushControls = selectedTool === "brush" || selectedTool === "eraser";
   const usesBrushShapeControl = usesBrushStamp;
   const usesFillControls = selectedTool === "fill";
+  const usesPrimarySecondaryControls = ["brush", "fill", "pencil"].includes(selectedTool) ||
+    (selectedTool === "shape" && shapeBlendMode === "paint");
   const usesShapeControls = selectedTool === "shape";
   const usesPaletteControls = selectedTool !== "eraser" &&
     !(selectedTool === "shape" && shapeBlendMode === "erase");
@@ -1723,6 +1721,64 @@ export function PatternMakerPage() {
       }
     : undefined;
   const shapePreview = shapeDraft ? getShapeGeometry(shapeDraft) : null;
+  const primarySecondaryColorControls = usesPrimarySecondaryControls ? (
+    <div className={styles.dualColorField}>
+      <label className={styles.colorField}>
+        <span>Primary</span>
+        <span className={styles.colorInputGroup}>
+          <span
+            className={styles.currentColor}
+            style={{ backgroundColor: selectedColor }}
+            aria-hidden="true"
+          />
+          <input
+            type="text"
+            aria-label="Primary colour hex"
+            value={colorInputValue}
+            onChange={(event) => {
+              setColorInputValue(event.target.value);
+
+              if (normaliseHexColor(event.target.value)) {
+                selectColor(event.target.value);
+              }
+            }}
+            onBlur={() => setColorInputValue(selectedColor)}
+          />
+        </span>
+      </label>
+      <button
+        className={styles.colorSwapButton}
+        type="button"
+        aria-label="Swap primary and secondary colours"
+        onClick={swapSelectedColors}
+      >
+        <MdiIcon path={mdiSwapHorizontal} />
+      </button>
+      <label className={styles.colorField}>
+        <span>Secondary</span>
+        <span className={styles.colorInputGroup}>
+          <span
+            className={styles.currentColor}
+            style={{ backgroundColor: secondaryColor }}
+            aria-hidden="true"
+          />
+          <input
+            type="text"
+            aria-label="Secondary colour hex"
+            value={secondaryColorInputValue}
+            onChange={(event) => {
+              setSecondaryColorInputValue(event.target.value);
+
+              if (normaliseHexColor(event.target.value)) {
+                selectSecondaryColor(event.target.value);
+              }
+            }}
+            onBlur={() => setSecondaryColorInputValue(secondaryColor)}
+          />
+        </span>
+      </label>
+    </div>
+  ) : null;
 
   return (
     <div className={styles.workspace}>
@@ -1856,6 +1912,7 @@ export function PatternMakerPage() {
                 <span className={styles.panelSubheading}>
                   {selectedTool === "pencil" ? "Pencil Settings" : `${implementControlLabel} Settings`}
                 </span>
+                {primarySecondaryColorControls}
                 <label className={styles.rangeField}>
                   <span className={styles.rangeLabel}>
                     <span>Size</span>
@@ -1992,6 +2049,7 @@ export function PatternMakerPage() {
             {usesFillControls ? (
               <div className={styles.panelBlock}>
                 <span className={styles.panelSubheading}>Fill Settings</span>
+                {primarySecondaryColorControls}
                 <div className={styles.shapeControl} aria-label="Fill mode">
                   <button
                     type="button"
@@ -2095,6 +2153,7 @@ export function PatternMakerPage() {
                     Erase
                   </button>
                 </div>
+                {primarySecondaryColorControls}
                 <label className={styles.rangeField}>
                   <span className={styles.rangeLabel}>
                     <span>Stroke width</span>
@@ -2137,62 +2196,6 @@ export function PatternMakerPage() {
             {usesPaletteControls ? (
               <div className={styles.panelBlock}>
                 <span className={styles.panelSubheading}>Palette</span>
-                <div className={styles.dualColorField}>
-                  <label className={styles.colorField}>
-                    <span>Primary</span>
-                    <span className={styles.colorInputGroup}>
-                      <span
-                        className={styles.currentColor}
-                        style={{ backgroundColor: selectedColor }}
-                        aria-hidden="true"
-                      />
-                      <input
-                        type="text"
-                        aria-label="Primary colour hex"
-                        value={colorInputValue}
-                        onChange={(event) => {
-                          setColorInputValue(event.target.value);
-
-                          if (normaliseHexColor(event.target.value)) {
-                            selectColor(event.target.value);
-                          }
-                        }}
-                        onBlur={() => setColorInputValue(selectedColor)}
-                      />
-                    </span>
-                  </label>
-                  <button
-                    className={styles.colorSwapButton}
-                    type="button"
-                    aria-label="Swap primary and secondary colours"
-                    onClick={swapSelectedColors}
-                  >
-                    <MdiIcon path={mdiSwapHorizontal} />
-                  </button>
-                  <label className={styles.colorField}>
-                    <span>Secondary</span>
-                    <span className={styles.colorInputGroup}>
-                      <span
-                        className={styles.currentColor}
-                        style={{ backgroundColor: secondaryColor }}
-                        aria-hidden="true"
-                      />
-                      <input
-                        type="text"
-                        aria-label="Secondary colour hex"
-                        value={secondaryColorInputValue}
-                        onChange={(event) => {
-                          setSecondaryColorInputValue(event.target.value);
-
-                          if (normaliseHexColor(event.target.value)) {
-                            selectSecondaryColor(event.target.value);
-                          }
-                        }}
-                        onBlur={() => setSecondaryColorInputValue(secondaryColor)}
-                      />
-                    </span>
-                  </label>
-                </div>
                 <div className={styles.paletteRow}>
                   {paletteColors.map((color) => (
                     <span className={styles.paletteSwatch} key={color}>
@@ -2208,7 +2211,6 @@ export function PatternMakerPage() {
                           className={styles.paletteRemoveButton}
                           type="button"
                           aria-label={`Remove ${color} from palette`}
-                          disabled={paletteColors.length <= 1}
                           onClick={() => removePaletteColor(color)}
                         >
                           ×
@@ -2217,6 +2219,9 @@ export function PatternMakerPage() {
                     </span>
                   ))}
                 </div>
+                {paletteColors.length === 0 ? (
+                  <p className={styles.transferMessage}>No saved palette colours.</p>
+                ) : null}
                 {recentColors.length > 0 ? (
                   <div className={styles.paletteRow} aria-label="Recent colours">
                     {recentColors.map((color) => (
