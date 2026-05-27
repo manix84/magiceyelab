@@ -13,6 +13,7 @@ import {
   mdiDownload,
   mdiEraser,
   mdiEyedropper,
+  mdiFormatColorFill,
   mdiGrid,
   mdiImageEdit,
   mdiPalette,
@@ -21,6 +22,7 @@ import {
   mdiSend,
   mdiShapeCirclePlus,
   mdiShapeSquarePlus,
+  mdiSwapHorizontal,
   mdiTrashCanOutline,
   mdiUndo,
   mdiUpload,
@@ -40,19 +42,23 @@ const repeatPreviewTileSize = 160;
 const defaultBrushSize = 36;
 const maxHistoryStates = 24;
 const acceptedPatternTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
-type PatternTool = "pencil" | "brush" | "eraser" | "eyedropper";
+type PatternTool = "pencil" | "brush" | "eraser" | "eyedropper" | "fill";
 type BrushShape = "circle" | "square";
+type FillMode = "contiguous" | "global";
 type CanvasPoint = {
   x: number;
   y: number;
 };
-type BrushPreviewStyle = CSSProperties & {
-  "--brush-preview-size": string;
-};
 type BrushCursorStyle = CSSProperties & {
+  "--brush-cursor-color": string;
   "--brush-cursor-size": string;
   "--brush-cursor-x": string;
   "--brush-cursor-y": string;
+};
+type ImplementDemoStyle = CSSProperties & {
+  "--implement-demo-color": string;
+  "--implement-demo-opacity": number;
+  "--implement-demo-size": string;
 };
 
 type StoredGeneratorState = {
@@ -67,6 +73,20 @@ type StoredGeneratorState = {
   patternFileName: string;
   patternImageDataUrl: string;
 };
+type StoredPatternMakerState = {
+  version: 1;
+  selectedTool: PatternTool;
+  selectedColor: string;
+  recentColors: string[];
+  brushShape: BrushShape;
+  brushSize: number;
+  brushOpacity: number;
+  fillMode: FillMode;
+  fillTolerance: number;
+  showGrid: boolean;
+  showTileBoundary: boolean;
+  imageDataUrl: string;
+};
 
 const defaultGeneratorState: StoredGeneratorState = {
   version: 1,
@@ -79,6 +99,20 @@ const defaultGeneratorState: StoredGeneratorState = {
   depthImageDataUrl: "",
   patternFileName: "",
   patternImageDataUrl: "",
+};
+const defaultPatternMakerState: StoredPatternMakerState = {
+  version: 1,
+  selectedTool: "brush",
+  selectedColor: palette[0],
+  recentColors: [],
+  brushShape: "circle",
+  brushSize: defaultBrushSize,
+  brushOpacity: 100,
+  fillMode: "contiguous",
+  fillTolerance: 8,
+  showGrid: true,
+  showTileBoundary: true,
+  imageDataUrl: "",
 };
 
 function getCanvasPoint(
@@ -188,6 +222,70 @@ function readStoredGeneratorState() {
   }
 }
 
+function readStoredPatternMakerState(): StoredPatternMakerState {
+  try {
+    const storedValue = window.localStorage.getItem(storageKeys.patternMaker);
+
+    if (!storedValue) {
+      return defaultPatternMakerState;
+    }
+
+    const parsedValue = JSON.parse(storedValue) as Partial<StoredPatternMakerState>;
+    const selectedColor = normaliseHexColor(parsedValue.selectedColor ?? "")
+      ?? defaultPatternMakerState.selectedColor;
+
+    return {
+      ...defaultPatternMakerState,
+      ...parsedValue,
+      version: 1 as const,
+      selectedTool: ["brush", "eraser", "eyedropper", "fill", "pencil"].includes(
+        parsedValue.selectedTool ?? "",
+      )
+        ? parsedValue.selectedTool as PatternTool
+        : defaultPatternMakerState.selectedTool,
+      selectedColor,
+      recentColors: Array.isArray(parsedValue.recentColors)
+        ? parsedValue.recentColors
+          .map((color) => normaliseHexColor(color))
+          .filter((color): color is string => Boolean(color))
+          .slice(0, 5)
+        : [],
+      brushShape: parsedValue.brushShape === "square" ? "square" as const : "circle" as const,
+      brushSize: clampNumber(
+        parsedValue.brushSize,
+        4,
+        96,
+        defaultPatternMakerState.brushSize,
+      ),
+      brushOpacity: clampNumber(
+        parsedValue.brushOpacity,
+        10,
+        100,
+        defaultPatternMakerState.brushOpacity,
+      ),
+      fillMode: parsedValue.fillMode === "global" ? "global" as const : "contiguous" as const,
+      fillTolerance: clampNumber(
+        parsedValue.fillTolerance,
+        0,
+        64,
+        defaultPatternMakerState.fillTolerance,
+      ),
+      showGrid: parsedValue.showGrid !== false,
+      showTileBoundary: parsedValue.showTileBoundary !== false,
+      imageDataUrl:
+        typeof parsedValue.imageDataUrl === "string" ? parsedValue.imageDataUrl : "",
+    };
+  } catch {
+    return defaultPatternMakerState;
+  }
+}
+
+function clampNumber(value: unknown, min: number, max: number, fallback: number) {
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.min(max, Math.max(min, value))
+    : fallback;
+}
+
 function loadImageSource(source: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
@@ -223,6 +321,41 @@ function rgbToHex(red: number, green: number, blue: number) {
   return `#${formatColorComponent(red)}${formatColorComponent(green)}${formatColorComponent(blue)}`;
 }
 
+function normaliseHexColor(value: string) {
+  const trimmedValue = value.trim();
+  const color = trimmedValue.startsWith("#") ? trimmedValue : `#${trimmedValue}`;
+
+  return /^#[\da-f]{6}$/i.test(color) ? color.toLowerCase() : null;
+}
+
+function hexToRgb(value: string) {
+  const color = normaliseHexColor(value) ?? palette[0];
+
+  return {
+    red: Number.parseInt(color.slice(1, 3), 16),
+    green: Number.parseInt(color.slice(3, 5), 16),
+    blue: Number.parseInt(color.slice(5, 7), 16),
+  };
+}
+
+function getPixelOffset(x: number, y: number, width: number) {
+  return (y * width + x) * 4;
+}
+
+function colorMatches(
+  data: Uint8ClampedArray,
+  offset: number,
+  target: { red: number; green: number; blue: number; alpha: number },
+  tolerance: number,
+) {
+  return (
+    Math.abs(data[offset] - target.red) <= tolerance &&
+    Math.abs(data[offset + 1] - target.green) <= tolerance &&
+    Math.abs(data[offset + 2] - target.blue) <= tolerance &&
+    Math.abs(data[offset + 3] - target.alpha) <= tolerance
+  );
+}
+
 function writeStoredGeneratorPattern(patternImageDataUrl: string) {
   const storedGeneratorState = readStoredGeneratorState();
   const nextGeneratorState: StoredGeneratorState = {
@@ -239,17 +372,41 @@ function writeStoredGeneratorPattern(patternImageDataUrl: string) {
 
 export function PatternMakerPage() {
   const navigate = useNavigate();
-  const [selectedTool, setSelectedTool] = useState<PatternTool>("brush");
-  const [selectedColor, setSelectedColor] = useState(palette[0]);
-  const [brushShape, setBrushShape] = useState<BrushShape>("circle");
-  const [brushSize, setBrushSize] = useState(defaultBrushSize);
-  const [brushOpacity, setBrushOpacity] = useState(100);
-  const [showGrid, setShowGrid] = useState(true);
-  const [showTileBoundary, setShowTileBoundary] = useState(true);
+  const [storedPatternMakerState] = useState(readStoredPatternMakerState);
+  const [selectedTool, setSelectedTool] = useState<PatternTool>(
+    storedPatternMakerState.selectedTool,
+  );
+  const [selectedColor, setSelectedColor] = useState(
+    storedPatternMakerState.selectedColor,
+  );
+  const [colorInputValue, setColorInputValue] = useState(
+    storedPatternMakerState.selectedColor,
+  );
+  const [recentColors, setRecentColors] = useState<string[]>(
+    storedPatternMakerState.recentColors,
+  );
+  const [brushShape, setBrushShape] = useState<BrushShape>(
+    storedPatternMakerState.brushShape,
+  );
+  const [brushSize, setBrushSize] = useState(storedPatternMakerState.brushSize);
+  const [brushOpacity, setBrushOpacity] = useState(
+    storedPatternMakerState.brushOpacity,
+  );
+  const [fillMode, setFillMode] = useState<FillMode>(
+    storedPatternMakerState.fillMode,
+  );
+  const [fillTolerance, setFillTolerance] = useState(
+    storedPatternMakerState.fillTolerance,
+  );
+  const [showGrid, setShowGrid] = useState(storedPatternMakerState.showGrid);
+  const [showTileBoundary, setShowTileBoundary] = useState(
+    storedPatternMakerState.showTileBoundary,
+  );
   const [transferMessage, setTransferMessage] = useState("");
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [brushPreviewPoint, setBrushPreviewPoint] = useState<CanvasPoint | null>(null);
+  const [hoverSampleColor, setHoverSampleColor] = useState(selectedColor);
   const paintCanvasRef = useRef<HTMLCanvasElement>(null);
   const topSeamRef = useRef<HTMLCanvasElement>(null);
   const rightSeamRef = useRef<HTMLCanvasElement>(null);
@@ -261,6 +418,67 @@ export function PatternMakerPage() {
   const undoStackRef = useRef<ImageData[]>([]);
   const redoStackRef = useRef<ImageData[]>([]);
   const importInputRef = useRef<HTMLInputElement>(null);
+  const draftSaveTimeoutRef = useRef<number | null>(null);
+  const hasRestoredDraftRef = useRef(false);
+
+  function selectColor(color: string) {
+    const normalisedColor = normaliseHexColor(color);
+
+    if (!normalisedColor) {
+      return;
+    }
+
+    setSelectedColor(normalisedColor);
+    setColorInputValue(normalisedColor);
+    setRecentColors((colors) => [
+      normalisedColor,
+      ...colors.filter((recentColor) => recentColor !== normalisedColor),
+    ].slice(0, 5));
+  }
+
+  function writePatternMakerDraft() {
+    const canvas = paintCanvasRef.current;
+
+    if (!canvas || !hasRestoredDraftRef.current) {
+      return;
+    }
+
+    const payload: StoredPatternMakerState = {
+      version: 1,
+      selectedTool,
+      selectedColor,
+      recentColors,
+      brushShape,
+      brushSize,
+      brushOpacity,
+      fillMode,
+      fillTolerance,
+      showGrid,
+      showTileBoundary,
+      imageDataUrl: canvas.toDataURL("image/png"),
+    };
+
+    try {
+      window.localStorage.setItem(storageKeys.patternMaker, JSON.stringify(payload));
+    } catch {
+      window.localStorage.removeItem(storageKeys.patternMaker);
+    }
+  }
+
+  function schedulePatternMakerDraftSave() {
+    if (!hasRestoredDraftRef.current) {
+      return;
+    }
+
+    if (draftSaveTimeoutRef.current) {
+      window.clearTimeout(draftSaveTimeoutRef.current);
+    }
+
+    draftSaveTimeoutRef.current = window.setTimeout(() => {
+      draftSaveTimeoutRef.current = null;
+      writePatternMakerDraft();
+    }, 250);
+  }
 
   function syncHistoryState() {
     setCanUndo(undoStackRef.current.length > 0);
@@ -398,6 +616,8 @@ export function PatternMakerPage() {
       repeatContext.fillStyle = pattern;
       repeatContext.fillRect(0, 0, repeatWidth, repeatHeight);
     }
+
+    schedulePatternMakerDraftSave();
   }
 
   function clearTile(pushHistory = true) {
@@ -491,12 +711,120 @@ export function PatternMakerPage() {
       1,
     ).data;
 
-    setSelectedColor(rgbToHex(pixel[0], pixel[1], pixel[2]));
+    selectColor(rgbToHex(pixel[0], pixel[1], pixel[2]));
     setTransferMessage("Picked colour from tile.");
+  }
+
+  function fillAt(event: PointerEvent<HTMLCanvasElement>) {
+    const canvas = paintCanvasRef.current;
+    const context = canvas?.getContext("2d", { willReadFrequently: true });
+
+    if (!canvas || !context) {
+      return;
+    }
+
+    const point = getCanvasPoint(event, canvas);
+    const startX = Math.max(0, Math.min(tileSize - 1, Math.floor(point.x)));
+    const startY = Math.max(0, Math.min(tileSize - 1, Math.floor(point.y)));
+    const imageData = context.getImageData(0, 0, tileSize, tileSize);
+    const { data } = imageData;
+    const targetOffset = getPixelOffset(startX, startY, tileSize);
+    const targetColor = {
+      red: data[targetOffset],
+      green: data[targetOffset + 1],
+      blue: data[targetOffset + 2],
+      alpha: data[targetOffset + 3],
+    };
+    const fillColor = hexToRgb(selectedColor);
+
+    if (
+      colorMatches(
+        data,
+        targetOffset,
+        { ...fillColor, alpha: 255 },
+        fillTolerance,
+      )
+    ) {
+      return;
+    }
+
+    pushUndoState();
+
+    function setPixel(offset: number) {
+      data[offset] = fillColor.red;
+      data[offset + 1] = fillColor.green;
+      data[offset + 2] = fillColor.blue;
+      data[offset + 3] = 255;
+    }
+
+    if (fillMode === "global") {
+      for (let offset = 0; offset < data.length; offset += 4) {
+        if (colorMatches(data, offset, targetColor, fillTolerance)) {
+          setPixel(offset);
+        }
+      }
+    } else {
+      const visited = new Uint8Array(tileSize * tileSize);
+      const queue: CanvasPoint[] = [{ x: startX, y: startY }];
+
+      while (queue.length > 0) {
+        const nextPoint = queue.pop();
+
+        if (!nextPoint) {
+          continue;
+        }
+
+        const pixelIndex = nextPoint.y * tileSize + nextPoint.x;
+
+        if (visited[pixelIndex]) {
+          continue;
+        }
+
+        visited[pixelIndex] = 1;
+
+        const offset = getPixelOffset(nextPoint.x, nextPoint.y, tileSize);
+
+        if (!colorMatches(data, offset, targetColor, fillTolerance)) {
+          continue;
+        }
+
+        setPixel(offset);
+
+        queue.push(
+          { x: (nextPoint.x + 1) % tileSize, y: nextPoint.y },
+          { x: (nextPoint.x - 1 + tileSize) % tileSize, y: nextPoint.y },
+          { x: nextPoint.x, y: (nextPoint.y + 1) % tileSize },
+          { x: nextPoint.x, y: (nextPoint.y - 1 + tileSize) % tileSize },
+        );
+      }
+    }
+
+    context.putImageData(imageData, 0, 0);
+    renderPatternPreviews();
   }
 
   function updateBrushPreview(event: PointerEvent<HTMLCanvasElement>) {
     setBrushPreviewPoint(getCanvasPoint(event, event.currentTarget));
+
+    if (selectedTool !== "eyedropper") {
+      return;
+    }
+
+    const context = event.currentTarget.getContext("2d", { willReadFrequently: true });
+
+    if (!context) {
+      return;
+    }
+
+    const point = getCanvasPoint(event, event.currentTarget);
+    const pixel = context.getImageData(
+      Math.max(0, Math.min(tileSize - 1, Math.floor(point.x))),
+      Math.max(0, Math.min(tileSize - 1, Math.floor(point.y))),
+      1,
+      1,
+    ).data;
+
+    setHoverSampleColor(rgbToHex(pixel[0], pixel[1], pixel[2]));
   }
 
   function handlePointerDown(event: PointerEvent<HTMLCanvasElement>) {
@@ -505,6 +833,11 @@ export function PatternMakerPage() {
 
     if (selectedTool === "eyedropper") {
       pickColorAt(event);
+      return;
+    }
+
+    if (selectedTool === "fill") {
+      fillAt(event);
       return;
     }
 
@@ -529,6 +862,7 @@ export function PatternMakerPage() {
 
     isPaintingRef.current = false;
     lastPointRef.current = null;
+    writePatternMakerDraft();
   }
 
   function handlePointerLeave(event: PointerEvent<HTMLCanvasElement>) {
@@ -729,6 +1063,7 @@ export function PatternMakerPage() {
       const shortcutTool = {
         b: "brush",
         e: "eraser",
+        f: "fill",
         i: "eyedropper",
         p: "pencil",
       }[event.key.toLowerCase()] as PatternTool | undefined;
@@ -745,6 +1080,10 @@ export function PatternMakerPage() {
   });
 
   useEffect(() => {
+    schedulePatternMakerDraftSave();
+  });
+
+  useEffect(() => {
     const canvas = paintCanvasRef.current;
     const context = canvas?.getContext("2d");
 
@@ -755,10 +1094,12 @@ export function PatternMakerPage() {
     context.fillStyle = "#f7f5ef";
     context.fillRect(0, 0, tileSize, tileSize);
 
-    const storedPattern = readStoredGeneratorState().patternImageDataUrl;
+    const storedPattern =
+      storedPatternMakerState.imageDataUrl || readStoredGeneratorState().patternImageDataUrl;
 
     if (!storedPattern) {
       renderPatternPreviews();
+      hasRestoredDraftRef.current = true;
       return;
     }
 
@@ -772,13 +1113,24 @@ export function PatternMakerPage() {
 
         context.drawImage(image, 0, 0, tileSize, tileSize);
         renderPatternPreviews();
+        hasRestoredDraftRef.current = true;
       })
-      .catch(() => renderPatternPreviews());
+      .catch(() => {
+        renderPatternPreviews();
+        hasRestoredDraftRef.current = true;
+      });
 
     return () => {
       isCurrent = false;
+      if (draftSaveTimeoutRef.current) {
+        window.clearTimeout(draftSaveTimeoutRef.current);
+        draftSaveTimeoutRef.current = null;
+      }
+      writePatternMakerDraft();
     };
-  }, []);
+    // Restore the draft once on page entry; the helpers above intentionally read current refs/state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storedPatternMakerState.imageDataUrl]);
 
   useEffect(() => {
     const repeatPreview = repeatPreviewRef.current;
@@ -797,24 +1149,34 @@ export function PatternMakerPage() {
     resizeObserver.observe(repeatPreview);
 
     return () => resizeObserver.disconnect();
+    // Resize observation should be registered once for this canvas instance.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const scaledBrushPreviewSize = Math.max(8, brushSize);
   const activeBrushShape = getActiveBrushShape();
-  const brushPreviewStyle: BrushPreviewStyle = {
-    "--brush-preview-size": `${scaledBrushPreviewSize}px`,
+  const activeCursorColor = selectedTool === "eyedropper"
+    ? hoverSampleColor
+    : selectedTool === "eraser"
+      ? "#f7f5ef"
+      : selectedColor;
+  const cursorIconPath = selectedTool === "eyedropper"
+    ? mdiEyedropper
+    : selectedTool === "fill"
+      ? mdiFormatColorFill
+      : null;
+  const implementDemoStyle: ImplementDemoStyle = {
+    "--implement-demo-color": activeCursorColor,
+    "--implement-demo-opacity": selectedTool === "pencil" ? 1 : brushOpacity / 100,
+    "--implement-demo-size": `${Math.max(8, brushSize)}px`,
   };
   const brushCursorStyle: BrushCursorStyle | undefined = brushPreviewPoint
     ? {
+        "--brush-cursor-color": activeCursorColor,
         "--brush-cursor-size": `${(brushSize / tileSize) * 100}%`,
         "--brush-cursor-x": `${(brushPreviewPoint.x / tileSize) * 100}%`,
         "--brush-cursor-y": `${(brushPreviewPoint.y / tileSize) * 100}%`,
       }
     : undefined;
-  const brushShapeClassName = classNames(styles.brushShape, {
-    [styles.squareShape]: activeBrushShape === "square",
-    [styles.eraserShape]: selectedTool === "eraser",
-  });
 
   return (
     <div className={styles.workspace}>
@@ -869,14 +1231,41 @@ export function PatternMakerPage() {
                 <MdiIcon path={mdiEyedropper} />
                 Pick
               </button>
+              <button
+                type="button"
+                aria-pressed={selectedTool === "fill"}
+                onClick={() => setSelectedTool("fill")}
+              >
+                <MdiIcon path={mdiFormatColorFill} />
+                Fill
+              </button>
             </div>
           </FieldGroup>
 
           <FieldGroup title="Brush">
-            <div className={styles.brushPreview} aria-label={`${selectedTool} preview, ${brushSize}px`}>
-              <span className={styles.brushPreviewLabel}>Shape</span>
-              <span className={styles.brushPreviewPad} aria-hidden="true">
-                <span className={brushShapeClassName} style={brushPreviewStyle} />
+            <div
+              className={styles.implementDemo}
+              aria-label={`${selectedTool} implement preview`}
+              style={implementDemoStyle}
+            >
+              <span className={styles.implementDemoText}>
+                <strong>{selectedTool === "eyedropper" ? "Picker" : selectedTool}</strong>
+                <span>
+                  {cursorIconPath
+                    ? selectedTool === "fill" ? selectedColor : hoverSampleColor
+                    : `${brushSize}px ${activeBrushShape}`}
+                </span>
+              </span>
+              <span
+                className={classNames(styles.implementDemoPad, {
+                  [styles.paintImplementDemo]: !cursorIconPath,
+                  [styles.squareImplementDemo]: !cursorIconPath && activeBrushShape === "square",
+                  [styles.iconImplementDemo]: cursorIconPath,
+                  [styles.eraserImplementDemo]: selectedTool === "eraser",
+                })}
+                aria-hidden="true"
+              >
+                {cursorIconPath ? <MdiIcon path={cursorIconPath} size={1.25} /> : null}
               </span>
             </div>
             <label className={styles.rangeField}>
@@ -937,6 +1326,38 @@ export function PatternMakerPage() {
                 Show grid
               </span>
             </label>
+            <div className={styles.shapeControl} aria-label="Fill mode">
+              <button
+                type="button"
+                aria-pressed={fillMode === "contiguous"}
+                onClick={() => setFillMode("contiguous")}
+              >
+                <MdiIcon path={mdiFormatColorFill} />
+                Contiguous
+              </button>
+              <button
+                type="button"
+                aria-pressed={fillMode === "global"}
+                onClick={() => setFillMode("global")}
+              >
+                <MdiIcon path={mdiSwapHorizontal} />
+                Global
+              </button>
+            </div>
+            <label className={styles.rangeField}>
+              <span className={styles.rangeLabel}>
+                <span>Fill tolerance</span>
+                <output>{fillTolerance}</output>
+              </span>
+              <input
+                type="range"
+                aria-label="Fill tolerance"
+                min="0"
+                max="64"
+                value={fillTolerance}
+                onChange={(event) => setFillTolerance(Number(event.target.value))}
+              />
+            </label>
             <label className={styles.toggleField}>
               <input
                 type="checkbox"
@@ -952,6 +1373,29 @@ export function PatternMakerPage() {
           </FieldGroup>
 
           <FieldGroup title="Palette">
+            <label className={styles.colorField}>
+              <span>Colour</span>
+              <span className={styles.colorInputGroup}>
+                <span
+                  className={styles.currentColor}
+                  style={{ backgroundColor: selectedColor }}
+                  aria-hidden="true"
+                />
+                <input
+                  type="text"
+                  aria-label="Current colour hex"
+                  value={colorInputValue}
+                  onChange={(event) => {
+                    setColorInputValue(event.target.value);
+
+                    if (normaliseHexColor(event.target.value)) {
+                      selectColor(event.target.value);
+                    }
+                  }}
+                  onBlur={() => setColorInputValue(selectedColor)}
+                />
+              </span>
+            </label>
             <div className={styles.paletteRow}>
               {palette.map((color) => (
                 <button
@@ -959,11 +1403,25 @@ export function PatternMakerPage() {
                   type="button"
                   aria-label={`Select ${color}`}
                   aria-pressed={selectedColor === color}
-                  onClick={() => setSelectedColor(color)}
+                  onClick={() => selectColor(color)}
                   style={{ backgroundColor: color }}
                 />
               ))}
             </div>
+            {recentColors.length > 0 ? (
+              <div className={styles.paletteRow} aria-label="Recent colours">
+                {recentColors.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    aria-label={`Select recent ${color}`}
+                    aria-pressed={selectedColor === color}
+                    onClick={() => selectColor(color)}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+            ) : null}
             <button type="button">
               <MdiIcon path={mdiPalette} />
               Edit palette
@@ -1049,6 +1507,7 @@ export function PatternMakerPage() {
                 height={tileSize}
                 aria-label="Pattern painting tile"
                 onPointerDown={handlePointerDown}
+                onPointerEnter={updateBrushPreview}
                 onPointerMove={handlePointerMove}
                 onPointerUp={stopPainting}
                 onPointerCancel={stopPainting}
@@ -1063,10 +1522,18 @@ export function PatternMakerPage() {
                   className={classNames(styles.brushCursor, {
                     [styles.squareBrushCursor]: activeBrushShape === "square",
                     [styles.eraserBrushCursor]: selectedTool === "eraser",
+                    [styles.iconBrushCursor]: cursorIconPath,
                   })}
                   style={brushCursorStyle}
                   aria-hidden="true"
-                />
+                >
+                  {cursorIconPath ? <MdiIcon path={cursorIconPath} size={1} /> : null}
+                  <span className={styles.brushCursorLabel}>
+                    {cursorIconPath
+                      ? selectedTool === "fill" ? "Fill" : "Pick"
+                      : `${brushSize}px ${activeBrushShape}`}
+                  </span>
+                </div>
               ) : null}
             </div>
             <canvas

@@ -13,7 +13,16 @@ function createCanvasContextMock() {
     drawImage: vi.fn(),
     fill: vi.fn(),
     fillRect: vi.fn(),
-    getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(4) })),
+    getImageData: vi.fn((...args: number[]) => {
+      const width = args[2] ?? 1;
+      const height = args[3] ?? 1;
+
+      return {
+      data: new Uint8ClampedArray(width * height * 4),
+      height,
+      width,
+      };
+    }),
     lineTo: vi.fn(),
     moveTo: vi.fn(),
     putImageData: vi.fn(),
@@ -104,6 +113,7 @@ describe("PatternMakerPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Pencil" }));
     await user.click(screen.getByRole("button", { name: "Square" }));
+    await user.click(screen.getByRole("button", { name: "Global" }));
     await user.click(screen.getByLabelText("Show grid"));
     await user.click(screen.getByLabelText("Show boundary"));
 
@@ -111,10 +121,14 @@ describe("PatternMakerPage", () => {
       "aria-pressed",
       "true",
     );
-    expect(screen.getByLabelText("pencil preview, 36px")).toBeInTheDocument();
     expect(screen.getByRole("slider", { name: "Brush size" })).toHaveValue("36");
     expect(screen.getByRole("slider", { name: "Brush opacity" })).toHaveValue("100");
+    expect(screen.getByRole("slider", { name: "Fill tolerance" })).toHaveValue("8");
     expect(screen.getByRole("button", { name: "Square" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Global" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
@@ -158,6 +172,12 @@ describe("PatternMakerPage", () => {
       "true",
     );
 
+    fireEvent.keyDown(window, { key: "f" });
+    expect(screen.getByRole("button", { name: "Fill" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
     fireEvent.keyDown(window, { key: "b" });
     expect(screen.getByRole("button", { name: "Brush" })).toHaveAttribute(
       "aria-pressed",
@@ -174,6 +194,17 @@ describe("PatternMakerPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Clear tile" }));
     expect(context.fillRect).toHaveBeenCalledWith(0, 0, 512, 512);
+  });
+
+  it("supports hex colour entry and recent colours", async () => {
+    const user = userEvent.setup();
+    renderPatternMakerPage();
+
+    await user.clear(screen.getByLabelText("Current colour hex"));
+    await user.type(screen.getByLabelText("Current colour hex"), "#abcdef");
+
+    expect(screen.getByLabelText("Current colour hex")).toHaveValue("#abcdef");
+    expect(screen.getByLabelText("Select recent #abcdef")).toBeInTheDocument();
   });
 
   it("saves the current tile as the generator pattern", async () => {

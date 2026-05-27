@@ -91,6 +91,11 @@ export function renderStereogram({
     patternSize.width,
     patternSize.height,
   );
+  const patternScale = patternSize.width / repeatWidth;
+  const scaledPatternHeight = Math.max(
+    1,
+    Math.round(patternSize.height / patternScale),
+  );
   const outputPixels = context.createImageData(outputWidth, outputHeight);
 
   for (let y = 0; y < outputHeight; y += 1) {
@@ -114,8 +119,14 @@ export function renderStereogram({
         continue;
       }
 
-      const patternX = x % patternSize.width;
-      const patternY = y % patternSize.height;
+      const patternX = Math.min(
+        patternSize.width - 1,
+        Math.floor((x % repeatWidth) * patternScale),
+      );
+      const patternY = Math.min(
+        patternSize.height - 1,
+        Math.floor((y % scaledPatternHeight) * patternScale),
+      );
       const patternIndex = (patternY * patternSize.width + patternX) * 4;
 
       outputPixels.data[outputIndex] = patternPixels.data[patternIndex];

@@ -182,8 +182,16 @@ function getPreviewSize(image: HTMLImageElement, bounds: PreviewBounds) {
     1,
     Math.round(fallbackWidth / (image.naturalWidth / image.naturalHeight)),
   );
-  const targetWidth = bounds.width > 0 ? bounds.width : fallbackWidth;
-  const targetHeight = bounds.height > 0 ? bounds.height : fallbackHeight;
+  const imageAspectRatio = image.naturalWidth / image.naturalHeight;
+  const boundsWidth = bounds.width > 0 ? bounds.width : fallbackWidth;
+  const boundsHeight = bounds.height > 0 ? bounds.height : fallbackHeight;
+  const boundsAspectRatio = boundsWidth / boundsHeight;
+  const targetWidth = boundsAspectRatio > imageAspectRatio
+    ? boundsHeight * imageAspectRatio
+    : boundsWidth;
+  const targetHeight = boundsAspectRatio > imageAspectRatio
+    ? boundsHeight
+    : boundsWidth / imageAspectRatio;
   const edgeScale = Math.min(1, maxPreviewEdge / Math.max(targetWidth, targetHeight));
   const pixelScale = Math.min(1, Math.sqrt(maxPreviewPixels / (targetWidth * targetHeight)));
   const scale = Math.min(edgeScale, pixelScale);

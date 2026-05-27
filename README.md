@@ -58,10 +58,11 @@ Instead of relying on imported images, you can draw your own seamless repeating 
 
 - 🎮 Canvas-based drawing tools
 - ✏️ Hard-edged Pencil mode for crisp tile work
+- 🪣 Contiguous and global Fill modes with tolerance control
 - 💧 Eyedropper colour picking from the tile
 - 🖌️ Adjustable brush size
 - 🌫️ Brush opacity and circle/square shape controls
-- ⭕ Brush and pencil size previews on the controls and canvas
+- ⭕ Colour-aware brush, fill, and eyedropper previews on the canvas
 - ♾️ Square painting tile with opposite-edge seam previews
 - 🔁 Wraparound painting across tile edges and corners
 - #️⃣ Optional grid overlay
@@ -69,11 +70,12 @@ Instead of relying on imported images, you can draw your own seamless repeating 
 - ↩️ Stroke-based undo / redo
 - ⌨️ Tool shortcuts for pencil, brush, eraser, and picker
 - 🧱 Repeated preview panel showing multiple tiled copies
-- 🎨 Palette controls
+- 🎨 Palette controls with hex input and recent colours
 - 🔗 Send the current tile to the Generator, or edit the Generator's current pattern
 - 📥 Import/export pattern PNGs
 - 🧹 Clear tile control
 - 🎲 Seamless random pattern generation
+- 💾 Restores your pattern draft and tool settings when you return
 - ⚡ Live stereogram updates
 
 ---
@@ -84,7 +86,7 @@ MagicEyeLab processes everything locally in your browser whenever possible.
 
 Your images are not uploaded to a server.
 
-Generator settings and imported working images may be saved in your browser's local storage so the app can restore your workspace when you come back. This data stays on your device.
+Generator settings, imported working images, Pattern Maker drafts, and drawing tool settings may be saved in your browser's local storage so the app can restore your workspace when you come back. This data stays on your device.
 
 - 🚫 No accounts
 - 🚫 No analytics

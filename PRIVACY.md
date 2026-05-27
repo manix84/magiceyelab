@@ -33,6 +33,8 @@ MagicEyeLab may optionally store small amounts of data in your browser for conve
 
 - ⚙️ Saved settings
 - 🗂️ Restored generator workspace state
+- 🧩 Pattern Maker drafts and tool settings
+- 🎨 Depth Painter tool settings
 - 🖼️ Imported depth and pattern images, stored locally in a bounded browser-friendly format
 - 🎨 UI preferences
 - 🧠 Temporary working state

@@ -68,6 +68,7 @@ Allow users to paint their own grayscale depth map inside the app.
 - Clear canvas
 - Import image as depth map
 - Export depth map as image
+- Restore in-progress controls and draft state locally after navigation
 
 ### Depth Rules
 
@@ -99,17 +100,18 @@ Allow users to create a seamless repeating pattern directly in the browser.
 - Pixel-style brush
 - Hard-edged pencil tool
 - Eraser
+- Fill tool with contiguous/global modes and tolerance control
 - Eyedropper
 - Colour picker
-- Palette support
+- Palette support with hex entry and recent colours
 - Adjustable brush size
 - Adjustable brush opacity
 - Circle/square brush shape controls
-- Brush/pencil size and shape preview
+- Colour-aware brush, fill, and eyedropper previews
 - Optional grid overlay
 - Optional tile boundary guide
 - Stroke-based undo / redo
-- Keyboard shortcuts for pencil, brush, eraser, eyedropper, undo, and redo
+- Keyboard shortcuts for pencil, brush, eraser, fill, eyedropper, undo, and redo
 - Seamless tile preview with opposite-edge strips around the active painting tile
 - Wraparound painting across tile boundaries and corners
 - Repeated pattern preview that shows several tiled copies at once
@@ -118,6 +120,7 @@ Allow users to create a seamless repeating pattern directly in the browser.
 - Clear pattern tile
 - Send created patterns to the Generator and edit the Generator's current pattern
 - Random pattern generator that creates wrapped motifs so generated tiles repeat cleanly
+- Restore in-progress pattern drafts and tool settings locally after navigation
 
 ### Nice To Have
 
@@ -237,14 +240,17 @@ Users can paint their own hidden image and generate a stereogram from it.
 - Add colour picker
 - Add palette
 - Add pencil, brush, and eraser tools
+- Add fill tool with contiguous/global modes and tolerance control
 - Add eyedropper colour picking
+- Add hex colour entry and recent colour swatches
 - Add brush size controls
 - Add brush opacity and shape controls
-- Add brush/pencil size preview on controls and canvas
+- Add colour-aware brush, fill, and eyedropper previews on the canvas
 - Add optional grid overlay
 - Add optional tile boundary guide
 - Add undo / redo
 - Add keyboard shortcuts for core tools
+- Add local draft restore for controls and painted work
 - Add seamless tile preview with live opposite-edge references
 - Add wraparound painting for strokes that cross tile boundaries
 - Add random pattern generator that draws wrapped seamless shapes
