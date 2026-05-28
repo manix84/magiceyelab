@@ -12,16 +12,154 @@
   @include mixins.tool-panel;
 }
 
+.panelHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.panelSubheading {
+  color: var(--color-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .segmentedControl {
   @include mixins.segmented-control;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .iconRow {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 2.4rem);
+  gap: 0.45rem;
+
+  button {
+    min-height: 2.4rem;
+    padding: 0.45rem;
+  }
+}
+
+.depthPreview {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.depthSwatch {
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.depthPreview span:last-child {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+
+  strong {
+    color: var(--color-label);
+    font-size: 1.1rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  small {
+    color: var(--color-muted);
+    line-height: 1.3;
+  }
+}
+
+.actionStack {
+  display: grid;
   gap: 0.5rem;
+
+  button {
+    justify-content: flex-start;
+  }
+}
+
+.hiddenInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.transferMessage {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
 }
 
 .previewArea {
   @include mixins.preview-area;
+}
+
+.depthCanvasShell {
+  position: relative;
+  display: grid;
+  width: min(100%, 42rem);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid var(--color-preview-border);
+  border-radius: 8px;
+  background:
+    linear-gradient(45deg, rgba(0, 0, 0, 0.06) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(0, 0, 0, 0.06) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(0, 0, 0, 0.06) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(0, 0, 0, 0.06) 75%),
+    var(--color-preview);
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
+  background-size: 16px 16px;
+}
+
+.depthCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.gridCanvas {
+  background-image:
+    linear-gradient(rgba(var(--color-accent-rgb), 0.13) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--color-accent-rgb), 0.13) 1px, transparent 1px);
+  background-size: calc(100% / 16) calc(100% / 16);
+}
+
+.brushCursor {
+  position: absolute;
+  left: var(--brush-cursor-x);
+  top: var(--brush-cursor-y);
+  width: var(--brush-cursor-size);
+  aspect-ratio: 1;
+  border: 2px solid rgba(255, 255, 255, 0.92);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.7),
+    0 0 0 9999px rgba(0, 0, 0, 0.02);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.eraserCursor {
+  border-style: dashed;
 }

@@ -9,7 +9,7 @@ const typecheckExtensions = /\.(cts|mts|ts|tsx)$/i;
 const appTypecheckPaths = /^src\//;
 const nodeTypecheckPaths =
   /^(scripts\/.*\.(cts|mts|ts)|vite\.config\.ts|vitest\.config\.ts|\.storybook\/.*\.(ts|tsx))$/;
-const ambientTypecheckFiles = ["src/vite-env.d.ts"];
+const ambientTypecheckFiles = ["src/vite-env.d.ts", "src/test/setupTests.ts"];
 const testTriggerPaths =
   /^(src|scripts|test|tests|vitest\.config|vite\.config|tsconfig|eslint\.config|package\.json|package-lock\.json)/;
 const binSuffix = process.platform === "win32" ? ".cmd" : "";
